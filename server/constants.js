@@ -6,6 +6,13 @@ module.exports.GAME_STATE = {
   PAUSED: 'paused'
 };
 
+module.exports.PHASE_STATE = {
+  WAIT: 'wait',
+  DRAW: 'draw',
+  COMBAT: 'combat',
+  PLAY: 'play'
+};
+
 module.exports.PLAYER_STATE = {
   WAITING: 'waiting',
   READY: 'ready',
