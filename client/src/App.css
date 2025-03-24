@@ -1,0 +1,206 @@
+.game-board {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f0f0f0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.opponent-area,
+.player-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 20%;
+}
+
+.opponent-cards,
+.player-cards {
+  width: 60%;
+  /* Stretched width */
+  height: 100%;
+  background-color: #d1e7dd;
+  border: 2px solid #0f5132;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  /* Space between cards */
+  flex-wrap: wrap;
+  /* Allow cards to wrap if needed */
+}
+
+.middle-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.active-cards {
+  width: 60%;
+  height: 20%;
+  background-color: #f8d7da;
+  border: 2px solid #842029;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.opponent-stack,
+.player-stack {
+  position: relative;
+  width: 120px;
+  /* Adjust to match card width */
+  height: 160px;
+  /* Adjust to match card height */
+  margin: 0 auto;
+}
+
+.opponent-stack {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.player-stack {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.player-stack .card,
+.opponent-stack .card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(var(--stack-offset, 0px));
+  /* Offset for stacking */
+  z-index: var(--stack-index, 0);
+  /* Control stacking order */
+  transition: transform 0.2s ease, z-index 0.2s ease;
+}
+
+.player-stack .card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(var(--stack-offset, 0px));
+  z-index: var(--stack-index, 0);
+  transition: transform 0.5s ease, top 0.5s ease, left 0.5s ease;
+}
+
+.player-stack .card[data-is-moving="true"] {
+  transform: translate(200px, -200px);
+  /* Move to the player area */
+  z-index: 100;
+  /* Bring the moving card to the front */
+}
+
+.player-cards .card {
+  position: relative;
+  margin: 10px;
+}
+
+.active-cards .card {
+  position: relative;
+  margin: 10px;
+}
+
+.player-stack .card:hover,
+.opponent-stack .card:hover {
+  transform: scale(1.2);
+  /* Slight zoom on hover */
+  z-index: 100;
+  /* Bring hovered card to the front */
+}
+
+.card {
+  position: relative;
+  width: 120px;
+  /* Card width */
+  height: 160px;
+  background-color: #fff;
+  border: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  transform-origin: bottom center;
+}
+
+.card:hover {
+  /* transform: scale(2.5); */
+  z-index: 10;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.card-image {
+  width: 100%;
+  height: 60%;
+  object-fit: cover;
+}
+
+.card-name {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.card-lore {
+  display: none;
+  /* Hidden by default */
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  text-align: center;
+  z-index: 20;
+}
+
+.custom-drag-layer {
+  position: fixed;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+}
+
+.drag-preview {
+  position: absolute;
+  width: 120px;
+  height: 160px;
+  background-color: #0f5132;
+}
+
+.drag-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid #333;
+  border-radius: 5px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+}
