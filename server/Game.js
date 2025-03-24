@@ -1,5 +1,5 @@
 const Player = require('./Player');
-const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE } = require('./constants');
+const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('./constants');
 
 class Game {
     constructor(io, room) {
@@ -11,6 +11,7 @@ class Game {
         this.TICK_RATE = 60;
         this.GAME_SPEED = 1000 / this.TICK_RATE;
         this.currentTurn = 0;
+        this.phase = PHASE_STATE.WAIT;
     }
 
     getInfo() {
@@ -20,14 +21,30 @@ class Game {
         }
     }
 
-    getGameState() {
-        return {
-            players: this.players.map(player => player.getPlayerState()),
-            state: this.state,
-            tick: this.tick,
-            currentTurn: this.currentTurn
-        }
-    }
+    getSanitizedGameState(requestingPlayerId) {
+		return {
+			players: this.players.map(player => {
+				const state = player.getPlayerState();
+				if (player.id !== requestingPlayerId) {
+					state.hand = { count: state.hand.length };
+				}
+				return state;
+			}),
+			state: this.state,
+			tick: this.tick,
+			currentTurn: this.currentTurn,
+			phase: this.phase
+		};
+	}
+
+	syncGameState() {
+		this.players.forEach(player => {
+			player.socket.emit(
+				SOCKET_EVENTS.SYNC_GAME_STATE,
+				this.getSanitizedGameState(player.id)
+			);
+		});
+	}
 
     addPlayer(socket, nickname) {
         const newPlayer = this.state == GAME_STATE.PLAYING ? new Player(socket, color,0,0) : new Player(socket, color);
@@ -60,6 +77,7 @@ class Game {
         player.energy -= card.cost;
         player.field = card;
         player.hand.splice(cardIndex, 1);
+        this.phase = "combat";
         this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
     }
 
@@ -71,7 +89,6 @@ class Game {
 
         const atkCard = attacker.field;
 
-        // Si el defensor no tiene carta en juego, el daño se aplica directamente a su salud
         if (!defender.field) {
             defender.health -= atkCard.attack;
             this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
@@ -101,6 +118,8 @@ class Game {
         defender.health -= extraDamageToDefender;
         attacker.health -= extraDamageToAttacker;
 
+        this.phase = "wait";
+
         if (defender.health <= 0 || attacker.health <= 0) {
             this.endGame();
         } else {
@@ -112,8 +131,13 @@ class Game {
     nextTurn() {
         this.currentTurn = (this.currentTurn + 1) % this.players.length;
         const currentPlayer = this.players[this.currentTurn];
+
+        this.phase = PHASE_STATE.DRAW;
         currentPlayer.energy += 1;
         currentPlayer.drawCard();
+        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+
+        this.phase = PHASE_STATE.COMBAT;
         this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
     }      
 
