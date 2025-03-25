@@ -1,6 +1,8 @@
 class Card {
-	constructor(name, cost, attack, defense) {
+	constructor(id, name, img, cost, attack, defense) {
+		this.id = id;
 		this.name = name;
+		this.img = img;
 		this.cost = cost;
 		this.attack = attack;
 		this.defense = defense;

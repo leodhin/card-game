@@ -32,6 +32,7 @@ io.on('connection', (socket) => {
 	socket.on('requestRoomList', function() {
 		const games = gameController.getGames();
 		socket.emit('roomList', games);
+        
 	});
 });
 

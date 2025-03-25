@@ -1,6 +1,6 @@
 const Game = require('./Game');
 
-const { GAME_STATE, SOCKET_EVENTS } = require('./constants');
+const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./constants');
 const { findGamePlayer, isEmpty } = require('./utils');
 
 function createGameSocket(io) {
@@ -24,7 +24,7 @@ function createGameSocket(io) {
                 next();
             }
             
-            io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getGameState());
+            //io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getSanitizedGameState(player.id));
         })
         socket.on(SOCKET_EVENTS.JOIN_ROOM, (room, nickname) => {
             console.log(gameState);
@@ -47,6 +47,13 @@ function createGameSocket(io) {
             gameState = existing_games[room];
 
             io.to(room).emit(SOCKET_EVENTS.PLAYER_CONNECTED, nickname || socket.id);
+
+            if (gameState.players.length === 2 && gameState.state === GAME_STATE.WAITING) {
+                gameState.players.forEach(player => {
+                    player.state = PLAYER_STATE.READY;
+                });
+                gameState.startGame();
+            }
         });
 
         socket.on('disconnect', () => {
@@ -76,20 +83,20 @@ function createGameSocket(io) {
         socket.on(SOCKET_EVENTS.PAUSE, () => {
         if (gameState.state === GAME_STATE.PLAYING) {
             gameState.state = GAME_STATE.PAUSED;
-            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.getGameState());
+            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
         }
         });
 
         socket.on(SOCKET_EVENTS.RESUME, () => {
         if (gameState.state === GAME_STATE.PAUSED) {
             gameState.state = GAME_STATE.PLAYING;
-            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.getGameState());
+            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
         }
         });
 
         socket.on(SOCKET_EVENTS.END, () => {
             gameState.state = GAME_STATE.FINISHED;
-            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.getGameState());
+            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
         }); 
 
         socket.on(SOCKET_EVENTS.PING, () => {
@@ -114,9 +121,10 @@ function createGameSocket(io) {
                 socket.emit(SOCKET_EVENTS.ERROR, "Jugador no encontrado");
                 return;
             }
-            // Permite que el jugador robe una carta
+
             player.drawCard();
-            io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getGameState());
+            gameState.phase = PHASE_STATE.PLAY;
+            gameState.syncGameState();
         });
 
         socket.on(SOCKET_EVENTS.PLAY_CARD, (cardIndex) => {
@@ -125,9 +133,20 @@ function createGameSocket(io) {
                 socket.emit(SOCKET_EVENTS.ERROR, "No es tu turno");
                 return;
             }
-            
             gameState.playCard(player, cardIndex);
-});
+        });
+
+        socket.on(SOCKET_EVENTS.PASS, () => {
+            if (gameState.phase === 'play') {
+                console.log('pass');
+                gameState.phase = 'combat';
+                gameState.syncGameState();
+            } else if (gameState.phase === 'combat') {
+                gameState.nextTurn();
+            }
+        });
+        
+
     });
 
     return {
