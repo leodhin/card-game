@@ -77,7 +77,7 @@ function Card({ card, isDraggable, isActionable, onClick, style, isFaceUp = true
           transform: isTransformed ? 'scale(2.5)' : 'scale(1)', // Scale only the hovered card
           transformOrigin: 'bottom center', // Scale from the bottom center
           backgroundImage: isFaceUp
-            ? `url(${card?.img})` // Show the front of the card
+            ? `url(/assets/${card?.img})` // Show the front of the card
             : `url('/path/to/card-back-image.jpg')`, // Show the back of the card
           backgroundSize: 'cover', // Ensure the image covers the entire div
           backgroundPosition: 'center', // Center the image
@@ -94,12 +94,16 @@ function Card({ card, isDraggable, isActionable, onClick, style, isFaceUp = true
         {isFaceUp && (
           <>
             {/* Mana Display */}
-            <div className="mana-display">{card?.mana}</div>
+            <div className="mana-display">{card?.cost}</div>
 
             <div className="card-content">
               <p className="card-name">{card?.name}</p>
               <p className="card-lore">{card?.lore}</p>
             </div>
+
+            {/* Atk & Def Display */}
+            <div className="attack-display">{card?.attack ?? ''}</div>
+            <div className="defense-display">{card?.defense ?? ''}</div>
           </>
         )}
       </div>

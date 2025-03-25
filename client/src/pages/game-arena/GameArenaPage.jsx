@@ -10,7 +10,7 @@ import card9 from '../../assets/card9.png';
 
 import { DndProvider, useDrop, useDragLayer } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Card from '../../components/Card/Card';
 import io from 'socket.io-client';
 import { useLocation } from 'react-router-dom';
@@ -81,13 +81,20 @@ function CustomDragLayer() {
 const SERVER_URL = "localhost:3000"; // "https://9pwbk5xx-3000.uks1.devtunnels.ms/";
 
 function GameArenaPage() {
-  const [opponentCards, setOpponentCards] = useState([]);
-  const [playerCards, setPlayerCards] = useState([]);
+  const socketRef = useRef(null);
+  const [opponentHand, setOpponentHand] = useState([]);
+	const [playerHand, setPlayerHand] = useState([]);
   const [opponentActiveCards, setOpponentActiveCards] = useState([]);
   const [playerActiveCards, setPlayerActiveCards] = useState([]);
   const [playerCardDeck, setPlayerCardDeck] = useState([]);
   const [movingCard, setMovingCard] = useState(null);
-  const [socket, setSocket] = useState(null);
+  const [playerHealth, setPlayerHealth] = useState(0);
+	const [playerEnergy, setPlayerEnergy] = useState(0);
+  const [opponentHealth, setOpponentHealth] = useState(0);
+	const [opponentEnergy, setOpponentEnergy] = useState(0);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [gamePhase, setGamePhase] = useState('');
+
 
   const location = useLocation();
 
@@ -96,7 +103,7 @@ function GameArenaPage() {
 
   useEffect(() => {
     const socket = io(SERVER_URL + '/game');
-    setSocket(io(SERVER_URL + '/game'));
+    socketRef.current = socket;
 
     socket.on('connect', () => {
       console.log('Connected to the server');
@@ -107,10 +114,38 @@ function GameArenaPage() {
 
     socket.on('syncGameState', (data) => {
       console.log('syncGameState', data);
+      const myPlayer = data.players.find(p => p.id === socket.id);
+			if (myPlayer) {
+				setPlayerHealth(myPlayer.health);
+				setPlayerEnergy(myPlayer.energy);
+				setPlayerHand(myPlayer.hand);
+        setPlayerActiveCards(myPlayer.field);
+
+        const opponent = data.players.find(p => p.id !== socket.id);
+        if (opponent) {
+          setOpponentHand(opponent.hand);
+          setOpponentHealth(opponent.health);
+          setOpponentEnergy(opponent.energy);
+          setOpponentActiveCards(opponent.field);
+        }
+
+        const activePlayer = data.players[data.currentTurn];
+        setGamePhase(data.phase);
+        
+        if (activePlayer && activePlayer.id === socket.id && data.state === 'playing') {
+          setIsMyTurn(true);
+          if (data.phase === 'draw') {
+            socket.emit('drawCard');
+          } 
+        } else {
+          setIsMyTurn(false);
+        }
+
+			}
     });
 
-    socket.on('error', () => {
-      alert('ERROR - cant connect with server')
+    socket.on('error', (errorMsg) => {
+      alert(errorMsg);
     });
 
     // CHAT GAME LOG, (DISCONNECT, CONNECT, USER CHATTING)
@@ -143,7 +178,7 @@ function GameArenaPage() {
     setMovingCard(card);
     // After the animation ends, move the card to the player's active cards
     setTimeout(() => {
-      setPlayerCards((prev) => [...prev, card]);
+      setPlayerHand((prev) => [...prev, card]);
       setPlayerCardDeck((prev) => prev.filter((c) => c.id !== card.id)); // Remove from the deck
       setMovingCard(null); // Reset the moving card
     }, 500); // Match the animation duration
@@ -151,8 +186,9 @@ function GameArenaPage() {
 
   const handleDropOnPlayer = (item) => {
     // Move the card to the player's active cards
-    setPlayerActiveCards((prev) => [...prev, item]);
-    setPlayerCards((prev) => prev.filter((c) => c.id !== item.id));
+    //setPlayerActiveCards((prev) => [...prev, item]);
+    //setPlayerHand((prev) => prev.filter((c) => c.id !== item.id));
+    socketRef.current.emit('playCard', item.id);
   }
 
   return (
@@ -162,21 +198,22 @@ function GameArenaPage() {
         {/* Opponent Area */}
         <div className="opponent-area">
           <div className="opponent-cards">
-            {opponentCards.map((card) => (
-              <Card key={card.id} isFaceUp={false} />
+            {Array.from({ length: opponentHand.count }, (_, index) => (
+              <Card key={index} isFaceUp={false} />
             ))}
           </div>
           <div className="opponent-hp-mana">
-            <div className="opponent-hp">HP: 30</div>&nbsp;
-            <div className="opponent-mana">Mana: 10</div>
+            <div className="opponent-hp">HP: {opponentHealth}</div>&nbsp;
+            <div className="opponent-mana">Mana: {opponentEnergy}</div>
           </div>
           <div className="opponent-stack">
-            {opponentCards.map((card, index) => (
+            {Array.from({ length: opponentHand.count }, (_, index) => (
               <Card
-                key={card.id}
+                key={index}
+                isFaceUp={false}
                 style={{
                   position: "absolute",
-                  '--stack-offset': `${index * 10}px`, // Adjust overlap
+                  '--stack-offset': `${index * 10}px`,
                   '--stack-index': index,
                 }}
               />
@@ -204,34 +241,65 @@ function GameArenaPage() {
             onDrop={handleDropOnPlayer}
           />
         </div>
+        {/** Buttons */}
+        {isMyTurn && gamePhase === 'combat' && (
+        <button
+        className="attack-button"
+        style={{ backgroundColor: 'red', color: 'white', fontWeight: 'bold', margin: '1rem', width: '100px', height: '50px' }}
+        onClick={() => {
+				if (socketRef.current) {
+					socketRef.current.emit('attack'); 
+				}
+			}}>
+			Attack!
+      </button>
+      )}
+        {isMyTurn && (gamePhase === 'combat' || gamePhase === 'play') && (
+        <button
+        className="attack-button"
+        style={{ backgroundColor: 'grey', color: 'white', fontWeight: 'bold', margin: '1rem', width: '100px', height: '50px' }}
+        onClick={() => {
+				if (socketRef.current) {
+					socketRef.current.emit('pass'); 
+				}
+			}}>
+			Pass
+      </button>
+      )}
+        
 
         {/* Player Area */}
         <div className="player-area">
           <div className="player-hp-mana">
-            <div className="player-hp">HP: 30</div>
+            <div className="player-hp">HP: {playerHealth}</div>
             &nbsp;
-            <div className="player-mana">Mana: 10</div>
+            <div className="player-mana">Mana: {playerEnergy}</div>
           </div>
-          <div className="player-cards">
-            {playerCards.map((card) => (
-              <Card key={card.id} card={card} isDraggable={true} isActionable={true} />
-            ))}
-          </div>
-          <div className="player-stack">
-            {playerCardDeck.map((card, index) => (
-              <Card
-                key={card.id}
-                card={card}
-                onClick={() => handleCardClick(card)}
-                isFaceUp={false}
-                style={{
-                  position: "absolute",
-                  '--stack-offset': `${index * 10}px`, // Adjust vertical offset for stacking
-                  '--stack-index': index, // Set stacking order
-                }}
-              />
-            ))}
-          </div>
+          {isMyTurn && <div className="turn-message">Is your Turn!</div>}
+          {playerHand && playerHand.length > 0 && (
+            <div className="player-cards">
+              {playerHand.map((card) => (
+                <Card key={card.id} card={card} isDraggable={true} isActionable={true} />
+              ))}
+            </div>
+          )}
+          {playerCardDeck && playerCardDeck.length > 0 && (
+            <div className="player-stack">
+              {playerCardDeck.map((card, index) => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  onClick={() => handleCardClick(card)}
+                  isFaceUp={false}
+                  style={{
+                    position: "absolute",
+                    '--stack-offset': `${index * 10}px`,
+                    '--stack-index': index,
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DndProvider>
