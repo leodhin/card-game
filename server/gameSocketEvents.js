@@ -22,7 +22,9 @@ function createGameSocket(io) {
             var player = findGamePlayer(gameState.players, socket);
             if (!isEmpty(player)) {
                 next();
-            } 
+            }
+            
+            io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getGameState());
         })
         socket.on(SOCKET_EVENTS.JOIN_ROOM, (room, nickname) => {
             console.log(gameState);

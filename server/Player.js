@@ -1,7 +1,8 @@
 const { DIRECTIONS, GAME_STATE, PIXEL_DISTANCE } = require('./constants');
+const Card = require('./Card');
 
 class Player {
-    constructor(socket, color, x, y) {
+    constructor(socket) {
         this.socket = socket;
         this.nickname = null;
         this.id = socket.id;

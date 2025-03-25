@@ -47,11 +47,11 @@ class Game {
 	}
 
     addPlayer(socket, nickname) {
-        const newPlayer = this.state == GAME_STATE.PLAYING ? new Player(socket, color,0,0) : new Player(socket, color);
+        const newPlayer = this.state == GAME_STATE.PLAYING ? new Player(socket) : new Player(socket);
         newPlayer.state = PLAYER_STATE.WAITING;
         newPlayer.nickname = nickname;
         this.players.push(newPlayer);
-        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState()); 
+        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState()); 
     }
 
     removePlayer(playerDisconnectedSocket) {
@@ -63,7 +63,7 @@ class Game {
                 this.state = GAME_STATE.WAITING;
             }
             this.io.to(this.name).emit(SOCKET_EVENTS.CLEAR);
-            this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+            this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState());
         }
     }
 
@@ -78,7 +78,7 @@ class Game {
         player.field = card;
         player.hand.splice(cardIndex, 1);
         this.phase = "combat";
-        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState());
     }
 
     attack(attacker, defender) {
@@ -91,7 +91,7 @@ class Game {
 
         if (!defender.field) {
             defender.health -= atkCard.attack;
-            this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+            this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState());
             return;
         }
 
@@ -123,7 +123,7 @@ class Game {
         if (defender.health <= 0 || attacker.health <= 0) {
             this.endGame();
         } else {
-            this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+            this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState());
         }
 }
 
@@ -135,10 +135,10 @@ class Game {
         this.phase = PHASE_STATE.DRAW;
         currentPlayer.energy += 1;
         currentPlayer.drawCard();
-        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState());
 
         this.phase = PHASE_STATE.COMBAT;
-        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getGameState());
+        this.io.to(this.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, this.getSanitizedGameState());
     }      
 
     startGame() {
