@@ -1,24 +1,30 @@
-import './App.css';
-import card1 from './assets/card1.png';
-import card2 from './assets/card2.png';
-import card3 from './assets/card3.png';
-import card4 from './assets/card4.png';
-import card5 from './assets/card5.png';
-import card6 from './assets/card6.png';
-import card7 from './assets/card7.png';
+import card1 from '../../assets/card1.png';
+import card2 from '../../assets/card2.png';
+import card3 from '../../assets/card3.png';
+import card4 from '../../assets/card4.png';
+import card5 from '../../assets/card5.png';
+import card6 from '../../assets/card6.png';
+import card7 from '../../assets/card7.png';
+import card8 from '../../assets/card8.png';
+import card9 from '../../assets/card9.png';
+
 import { DndProvider, useDrop, useDragLayer } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useState } from 'react';
-import Card from './components/Card/Card';
+import { useState, useEffect } from 'react';
+import Card from '../../components/Card/Card';
+import io from 'socket.io-client';
+import { useLocation } from 'react-router-dom';
 
 const cards = [
-  { id: 1, name: 'Splash bee', img: card1 },
-  { id: 2, name: 'Galatic goblin', img: card2 },
-  { id: 3, name: 'Chamiligon', img: card3 },
-  { id: 4, name: 'Chamilifenix', img: card4 },
-  { id: 5, name: 'Chamilisaur', img: card5 },
-  { id: 6, name: 'Chamilisaur', img: card6 },
-  { id: 7, name: 'Chamilisaur', img: card7 },
+  { id: 1, name: 'Splash Bee', img: card1, mana: 3, lore: 'A buzzing defender of the hive.' },
+  { id: 2, name: 'Galactic Goblin', img: card2, mana: 5, lore: 'A mischievous traveler of the stars.' },
+  { id: 3, name: 'Chamiligon', img: card3, mana: 2, lore: 'A sneaky creature that blends in anywhere.' },
+  { id: 4, name: 'Chamilifenix', img: card4, mana: 4 },
+  { id: 5, name: 'Chamilisaur', img: card5, mana: 6 },
+  { id: 6, name: 'Chamilisaur', img: card6, mana: 1 },
+  { id: 7, name: 'Chamilisaur', img: card7, mana: 3 },
+  { id: 8, name: 'Chamilisaur', img: card8, mana: 2 },
+  { id: 9, name: 'Chamilisaur', img: card9, mana: 4 },
 ];
 
 
@@ -72,18 +78,69 @@ function CustomDragLayer() {
   );
 }
 
-function App() {
-  const [opponentCards, setOpponentCards] = useState(cards.slice(3));
-  const [playerCards, setPlayerCards] = useState(cards.slice(0, 3));
+const SERVER_URL = "localhost:3000"; // "https://9pwbk5xx-3000.uks1.devtunnels.ms/";
+
+function GameArenaPage() {
+  const [opponentCards, setOpponentCards] = useState([]);
+  const [playerCards, setPlayerCards] = useState([]);
   const [opponentActiveCards, setOpponentActiveCards] = useState([]);
   const [playerActiveCards, setPlayerActiveCards] = useState([]);
-  const [playerCardDeck, setPlayerCardDeck] = useState(cards.slice(0, 3)); // Player's deck
-  const [movingCard, setMovingCard] = useState(null); // Track the card being moved
+  const [playerCardDeck, setPlayerCardDeck] = useState([]);
+  const [movingCard, setMovingCard] = useState(null);
+  const [socket, setSocket] = useState(null);
+
+  const location = useLocation();
+
+  const gameId = location.pathname.split('/').pop();
+
+
+  useEffect(() => {
+    const socket = io(SERVER_URL + '/game');
+    setSocket(io(SERVER_URL + '/game'));
+
+    socket.on('connect', () => {
+      console.log('Connected to the server');
+      socket.emit('ping');
+    });
+
+    socket.emit('joinRoom', gameId, localStorage.getItem('nickname'));
+
+    socket.on('syncGameState', (data) => {
+      console.log('syncGameState', data);
+    });
+
+    socket.on('error', () => {
+      alert('ERROR - cant connect with server')
+    });
+
+    // CHAT GAME LOG, (DISCONNECT, CONNECT, USER CHATTING)
+    socket.on('playerConnected', (nickname) => {
+      const message = `${nickname} connected.`;
+    });
+
+    socket.on('playerDisconnected', (nickname) => {
+      const message = ` ${nickname} disconnected.`;
+    });
+
+    socket.on('pong', () => {
+
+    });
+
+    socket.on('state', (data) => {
+      const message = `State of the game  ${data}.`;
+    });
+
+    socket.on('receiveMessage', (player, message) => {
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const handleCardClick = (card) => {
     // Set the moving card to trigger the animation
     setMovingCard(card);
-
     // After the animation ends, move the card to the player's active cards
     setTimeout(() => {
       setPlayerCards((prev) => [...prev, card]);
@@ -106,16 +163,19 @@ function App() {
         <div className="opponent-area">
           <div className="opponent-cards">
             {opponentCards.map((card) => (
-              <Card key={card.id} card={card} isDraggable={true} />
+              <Card key={card.id} isFaceUp={false} />
             ))}
+          </div>
+          <div className="opponent-hp-mana">
+            <div className="opponent-hp">HP: 30</div>&nbsp;
+            <div className="opponent-mana">Mana: 10</div>
           </div>
           <div className="opponent-stack">
             {opponentCards.map((card, index) => (
               <Card
                 key={card.id}
-                card={card}
-                isDraggable={true}
                 style={{
+                  position: "absolute",
                   '--stack-offset': `${index * 10}px`, // Adjust overlap
                   '--stack-index': index,
                 }}
@@ -137,7 +197,7 @@ function App() {
             title={
               playerActiveCards.length > 0
                 ? playerActiveCards.map((card) => (
-                  <Card key={card.id} card={card} />
+                  <Card key={card.id} card={card} isActionable={true} isDraggable={false} />
                 ))
                 : 'Player Active Cards'
             }
@@ -147,6 +207,11 @@ function App() {
 
         {/* Player Area */}
         <div className="player-area">
+          <div className="player-hp-mana">
+            <div className="player-hp">HP: 30</div>
+            &nbsp;
+            <div className="player-mana">Mana: 10</div>
+          </div>
           <div className="player-cards">
             {playerCards.map((card) => (
               <Card key={card.id} card={card} isDraggable={true} isActionable={true} />
@@ -157,12 +222,12 @@ function App() {
               <Card
                 key={card.id}
                 card={card}
-                isDraggable={false} // Disable dragging for deck cards
-                onClick={() => handleCardClick(card)} // Move card on click
+                onClick={() => handleCardClick(card)}
+                isFaceUp={false}
                 style={{
-                  '--stack-offset': `${index * 10}px`, // Adjust overlap
-                  '--stack-index': index,
-                  '--is-moving': movingCard?.id === card.id ? 'true' : 'false', // Add moving state
+                  position: "absolute",
+                  '--stack-offset': `${index * 10}px`, // Adjust vertical offset for stacking
+                  '--stack-index': index, // Set stacking order
                 }}
               />
             ))}
@@ -173,4 +238,4 @@ function App() {
   );
 }
 
-export default App;
+export default GameArenaPage;
