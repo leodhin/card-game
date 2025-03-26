@@ -1,5 +1,6 @@
 // Server entry point
 const express = require('express');
+const cors = require('cors');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -16,6 +17,7 @@ const { findGamePlayer } = require('./utils');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+app.use(cors());
 
 
 app.use(session({
@@ -25,8 +27,14 @@ app.use(session({
 }));
 
 app.use(express.static('public'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static('blob'));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Routes   
+const cardRoutes = require('./routes/cardRoutes');
+app.use('/api', cardRoutes); 
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -44,6 +52,7 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });
+
 
 connectDB();
 
