@@ -1,4 +1,4 @@
-const Game = require('./Game');
+const Game = require('./models/Game');
 
 const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./constants');
 const { findGamePlayer, isEmpty } = require('./utils');

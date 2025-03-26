@@ -1,4 +1,4 @@
-const { DIRECTIONS, GAME_STATE, PIXEL_DISTANCE } = require('./constants');
+const { DIRECTIONS, GAME_STATE, PIXEL_DISTANCE } = require('../constants');
 const Card = require('./Card');
 
 class Player {

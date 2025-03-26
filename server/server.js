@@ -1,9 +1,13 @@
-// server.js
+// Server entry point
 const express = require('express');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
 const session = require('express-session');
+
+// Database
+const mongoose = require('mongoose');
+const uri = "mongodb+srv://mgata:libertad@cardgamedb.xjlzfl9.mongodb.net/?retryWrites=true&w=majority&appName=CardGameDB";
 
 const { GAME_STATE, SOCKET_EVENTS } = require('./constants');
 const createSocketGame = require('./gameSocketEvents');
@@ -12,6 +16,7 @@ const { findGamePlayer } = require('./utils');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+
 
 app.use(session({
 	secret: 'tuSecretoMuySeguro',
@@ -32,10 +37,22 @@ io.on('connection', (socket) => {
 	socket.on('requestRoomList', function() {
 		const games = gameController.getGames();
 		socket.emit('roomList', games);
-        
+
 	});
 });
 
 server.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });
+
+connectDB();
+
+async function connectDB() {
+	try {
+		await mongoose.connect(uri);
+        console.log("Connected to MongoDB");
+	} catch (err) {
+		console.error("Error connecting MongoDB:", err);
+		process.exit(1);
+	}
+}

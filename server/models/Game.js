@@ -1,5 +1,5 @@
 const Player = require('./Player');
-const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('./constants');
+const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../constants');
 
 class Game {
     constructor(io, room) {
