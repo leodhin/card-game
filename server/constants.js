@@ -41,7 +41,8 @@ module.exports.SOCKET_EVENTS = {
   ERROR: 'error',
   PLAY_CARD: 'playCard', 
   DRAW_CARD: 'drawCard',
-  ATTACK: 'attack'
+  ATTACK: 'attack',
+  PASS: 'pass'
 };
 
 module.exports.PIXEL_DISTANCE = 5;
