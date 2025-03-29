@@ -1,7 +1,7 @@
-const Game = require('./models/Game');
+const Game = require('./game/Game');
 
-const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./constants');
-const { findGamePlayer, isEmpty } = require('./utils');
+const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./utils/constants');
+const { findGamePlayer, isEmpty } = require('./utils/utils');
 
 function createGameSocket(io) {
     const existing_games = {};
@@ -118,7 +118,7 @@ function createGameSocket(io) {
         socket.on(SOCKET_EVENTS.DRAW_CARD, () => {
             const player = findGamePlayer(gameState.players, socket);
             if (!player) {
-                socket.emit(SOCKET_EVENTS.ERROR, "Jugador no encontrado");
+                socket.emit(SOCKET_EVENTS.ERROR, "Player not found");
                 return;
             }
 
@@ -130,7 +130,7 @@ function createGameSocket(io) {
         socket.on(SOCKET_EVENTS.PLAY_CARD, (cardIndex) => {
             const player = findGamePlayer(gameState.players, socket);
             if (gameState.players[gameState.currentTurn].id !== player.id) {
-                socket.emit(SOCKET_EVENTS.ERROR, "No es tu turno");
+                socket.emit(SOCKET_EVENTS.ERROR, "It's not your turn!");
                 return;
             }
             gameState.playCard(player, cardIndex);

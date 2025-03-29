@@ -1,1 +1,62 @@
-<div>Server de los papus</div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login & Registro</title>
+</head>
+<body>
+  <h1>Registro</h1>
+  <form id="register-form">
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="text" name="nickname" placeholder="Nickname"><br>
+    <input type="password" name="password" placeholder="Contraseña" required><br>
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <h1>Login</h1>
+  <form id="login-form">
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="password" name="password" placeholder="Contraseña" required><br>
+    <button type="submit">Iniciar sesión</button>
+  </form>
+
+  <h2 id="response"></h2>
+
+  <script>
+    const baseURL = 'http://localhost:3000/api/auth'; // cambia si usas devtunnels u otro host
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const res = await fetch(`${baseURL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: form.get('email'),
+          password: form.get('password'),
+          nickname: form.get('nickname')
+        })
+      });
+      const data = await res.json();
+      document.getElementById('response').innerText = JSON.stringify(data);
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const res = await fetch(`${baseURL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: form.get('email'),
+          password: form.get('password')
+        })
+      });
+      const data = await res.json();
+      document.getElementById('response').innerText = JSON.stringify(data);
+    });
+  </script>
+</body>
+</html>

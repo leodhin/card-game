@@ -1,5 +1,6 @@
 const Player = require('./Player');
-const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../constants');
+const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../utils/constants');
+const cardAttributes = require('./attributes/cardAttributes');
 
 class Game {
     constructor(io, room) {
@@ -92,6 +93,19 @@ class Game {
         player.hand.splice(cardIndex, 1);
         this.phase = "combat";
         console.log("Card played", card);
+
+        // Apply dynamic attribute effects if any
+        if (card.attribute) {
+
+            // If the attribute property is a string, convert it to an array for iteration
+            const effects = Array.isArray(card.attribute) ? card.attribute : [card.attribute];
+            const opponent = this.players.find(p => p.id !== player.id);
+            effects.forEach(effectKey => {
+                if (cardAttributes[effectKey] && typeof cardAttributes[effectKey].applyEffect === 'function') {
+                    cardAttributes[effectKey].applyEffect(this, player, opponent);
+                }
+		});
+	}
         this.syncGameState();
     }
 
@@ -148,6 +162,10 @@ class Game {
 
         this.phase = PHASE_STATE.DRAW;
         currentPlayer.energy += 1;
+        currentPlayer.drawCard();
+        this.syncGameState();
+
+        this.phase = PHASE_STATE.PLAY;
         this.syncGameState();
     }      
 
@@ -172,8 +190,13 @@ class Game {
 			this.players[this.currentTurn].state = PLAYER_STATE.PLAYING;
 			this.state = GAME_STATE.PLAYING;
 			this.phase = PHASE_STATE.DRAW;
+            this.syncGameState();
             }
         }
+
+        this.players[this.currentTurn].drawCard();
+        this.players[this.currentTurn].socket.emit(SOCKET_EVENTS.DRAW_CARD);
+        this.phase = PHASE_STATE.PLAY;
         this.syncGameState();
     }
 

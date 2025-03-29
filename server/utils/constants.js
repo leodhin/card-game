@@ -34,7 +34,7 @@ module.exports.SOCKET_EVENTS = {
   PAUSE: 'pause',
   RESUME: 'resume',
   END: 'end',
-  GAMESTATE: 'gamestate',
+  GAME_START: 'gameStart',
   GAME_OVER: 'gameOver',
   SEND_MESSAGE: 'sendMessage',
   RECEIVE_MESSAGE: 'receiveMessage',
