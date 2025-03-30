@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Backoffice - Create Card Power</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				margin: 2rem;
+			}
+			form {
+				max-width: 500px;
+			}
+			label {
+				display: block;
+				margin: 1rem 0 0.5rem;
+			}
+			input, textarea {
+				width: 100%;
+				padding: 0.5rem;
+			}
+			button {
+				margin-top: 1rem;
+				padding: 0.5rem 1rem;
+			}
+			.parameter-input {
+				margin-bottom: 0.5rem;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Create Card Power</h1>
+		<form id="powerForm">
+			<label for="name">Name:</label>
+			<input type="text" id="name" name="name" required />
+			
+			<label for="description">Description:</label>
+			<textarea id="description" name="description"></textarea>
+			
+			<label for="effectKey">Effect Key:</label>
+			<input type="text" id="effectKey" name="effectKey" required />
+			
+			<label>Parameters (as strings):</label>
+			<div id="parametersContainer"></div>
+			<button type="button" id="addParamBtn">Add Parameter</button>
+			
+			<button type="submit">Create Power</button>
+		</form>
+		<div id="result"></div>
+		<script>
+			const form = document.getElementById('powerForm');
+			const parametersContainer = document.getElementById('parametersContainer');
+			const addParamBtn = document.getElementById('addParamBtn');
+			
+			addParamBtn.addEventListener('click', function() {
+				const input = document.createElement('input');
+				input.type = 'text';
+				input.className = 'parameter-input';
+				input.placeholder = 'Enter parameter value';
+				parametersContainer.appendChild(input);
+			});
+			
+			form.addEventListener('submit', async function(e) {
+				e.preventDefault();
+				const name = document.getElementById('name').value;
+				const description = document.getElementById('description').value;
+				const effectKey = document.getElementById('effectKey').value;
+				
+				const paramInputs = document.querySelectorAll('.parameter-input');
+				const parameters = [];
+				paramInputs.forEach(input => {
+					const value = input.value.trim();
+					if (value !== '') {
+						parameters.push(value);
+					}
+				});
+				
+				try {
+					const response = await fetch('/api/card-power', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ name, description, effectKey, parameters })
+					});
+					const resultDiv = document.getElementById('result');
+					if (response.ok) {
+						const data = await response.json();
+						resultDiv.textContent = 'Power created: ' + data.name;
+					} else {
+						const error = await response.json();
+						resultDiv.textContent = 'Error: ' + error.error;
+					}
+				} catch (err) {
+					console.error(err);
+				}
+			});
+		</script>
+	</body>
+</html>

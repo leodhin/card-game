@@ -8,7 +8,7 @@ const CardSchema = new mongoose.Schema({
 	cost:     { type: Number, required: true },
 	lore:     { type: String, required: true },
 	userId:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-	attributes: { type: [String], default: [] },
+	powers: { type: [String], default: [] },
 	createdAt:{ type: Date, default: Date.now },
     createdBy:{ type: String },
     modifiedAt:{ type: Date, default: Date.now },

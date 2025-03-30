@@ -1,20 +1,49 @@
 const Game = require('./game/Game');
+const jwt = require('jsonwebtoken');
 
 const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./utils/constants');
 const { findGamePlayer, isEmpty } = require('./utils/utils');
 
 function createGameSocket(io) {
-    const existing_games = {};
+    // Place the JWT authentication middleware here:
+    io.use((socket, next) => {
+        // Get token from handshake.auth or query string
+        const authHeader = socket?.handshake?.headers?.authorization || socket.handshake.query.token;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            socket.emit('unauthorized', 'You must be logged in to play');
+        }
+    
+        const token = authHeader.split(' ')[1]; 
+        jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
+            if (err) {
+                console.error(err);
+                return next(new Error("Authentication error: Invalid token"));
+            }
+            socket.request.user = decoded;
+            next();
+        });
+    });
 
     io.on('connection', (socket) => {
-        
-        let gameState =  {};
-        
+
+        const existing_games = {};
+        const userId = socket?.request?.user?.userId;
+
+        if (userId) {
+            console.log('User connected with userId:', userId, 'and socket id:', socket.id);
+        } else {
+            socket.emit('unauthorized', 'You must be logged in to play');
+        }
+
+        let gameState = [];
+
         socket.use((packet, next) => {
+
             const eventName = packet[0];
 
             // If is joining room
-            if(eventName === SOCKET_EVENTS.JOIN_ROOM) {
+            if (eventName === SOCKET_EVENTS.JOIN_ROOM) {
                 next();
             }
 
@@ -23,26 +52,27 @@ function createGameSocket(io) {
             if (!isEmpty(player)) {
                 next();
             }
-            
+
             //io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getSanitizedGameState(player.id));
         })
         socket.on(SOCKET_EVENTS.JOIN_ROOM, (room, nickname) => {
-            console.log(gameState);
+            let game = existing_games[room];
 
-            socket.join(room);
-            console.log(nickname+ `socket ${socket.id} has joined room ${room}`);
-
-            const game = existing_games[room];
-
-            // If game doesnt exist, create new one 
+            // If game doesn't exist, create new one 
             // otherwise just add add the socket to the game as player
-            if(!game) {
+            if (!game) {
                 let newGame = new Game(io, room);
-                newGame.addPlayer(socket, nickname);
+                game = newGame
                 existing_games[room] = newGame;
             } else {
-                game.addPlayer(socket, nickname);
+                if (game.players?.length === 2) {
+                    socket.emit(SOCKET_EVENTS.ERROR, "Game is full or already started");
+                    socket.disconnect();
+                    return;
+                }
             }
+            socket.join(room);
+            game.addPlayer(socket, nickname);
 
             gameState = existing_games[room];
 
@@ -60,19 +90,19 @@ function createGameSocket(io) {
             socket.leaveAll(); // This ensure socket leaves all rooms
             var playerRemoved = findGamePlayer(gameState.players, socket);
 
-            if(isEmpty(playerRemoved)) return;
+            if (isEmpty(playerRemoved)) return;
 
             gameState.removePlayer(socket);
 
-            io.to(gameState.name).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, playerRemoved.nickname);   
+            io.to(gameState.name).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, playerRemoved.nickname);
 
             for (const gameId in existing_games) {
                 if (existing_games[gameId].players.length === 0) {
                     delete existing_games[gameId];
                 }
             }
-        })  
-        
+        })
+
         socket.on(SOCKET_EVENTS.READY, () => {
             const player = findGamePlayer(gameState.players, socket);
             player.state = 'ready';
@@ -81,38 +111,38 @@ function createGameSocket(io) {
 
 
         socket.on(SOCKET_EVENTS.PAUSE, () => {
-        if (gameState.state === GAME_STATE.PLAYING) {
-            gameState.state = GAME_STATE.PAUSED;
-            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
-        }
+            if (gameState.state === GAME_STATE.PLAYING) {
+                gameState.state = GAME_STATE.PAUSED;
+                io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
+            }
         });
 
         socket.on(SOCKET_EVENTS.RESUME, () => {
-        if (gameState.state === GAME_STATE.PAUSED) {
-            gameState.state = GAME_STATE.PLAYING;
-            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
-        }
+            if (gameState.state === GAME_STATE.PAUSED) {
+                gameState.state = GAME_STATE.PLAYING;
+                io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
+            }
         });
 
         socket.on(SOCKET_EVENTS.END, () => {
             gameState.state = GAME_STATE.FINISHED;
             io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
-        }); 
+        });
 
         socket.on(SOCKET_EVENTS.PING, () => {
             socket.emit(SOCKET_EVENTS.PONG);
-        }); 
+        });
 
         socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
             var player = findGamePlayer(gameState.players, socket);
             io.to(gameState.name).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, player.getPlayerState(), message);
-        }); 
+        });
 
-        socket.on(SOCKET_EVENTS.ATTACK, () => { 
-            const attacker = gameState.players[gameState.currentTurn]; 
-            const defender = gameState.players.find(p => p.id !== attacker.id); 
-            gameState.attack(attacker, defender); 
-            gameState.nextTurn(); 
+        socket.on(SOCKET_EVENTS.ATTACK, () => {
+            const attacker = gameState.players[gameState.currentTurn];
+            const defender = gameState.players.find(p => p.id !== attacker.id);
+            gameState.attack(attacker, defender);
+            gameState.nextTurn();
         });
 
         socket.on(SOCKET_EVENTS.DRAW_CARD, () => {
@@ -145,21 +175,21 @@ function createGameSocket(io) {
                 gameState.nextTurn();
             }
         });
-        
+
 
     });
 
     return {
-    getGames() {
+        getGames() {
             // Ensure existing_games is an object
             if (typeof existing_games !== 'object' || existing_games === null) {
                 console.log("existing games is not an object.");
                 return [];
             }
-        
+
             // Convert the object to an array of game instances
             const gameArray = Object.values(existing_games);
-        
+
             // Map over the array to get the game info
             const games = gameArray.map((game, index) => {
                 if (game && typeof game.getInfo === 'function') {
@@ -171,7 +201,7 @@ function createGameSocket(io) {
                     return null;
                 }
             });
-        
+
             return games;
         }
     };

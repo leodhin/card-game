@@ -1,9 +1,11 @@
-const { DIRECTIONS, GAME_STATE, PIXEL_DISTANCE } = require('../utils/constants');
-const Card = require('./Card');
+const { GAME_STATE } = require('../utils/constants');
+const Deck = require('../models/DeckModel');
 
 class Player {
     constructor(socket) {
         this.socket = socket;
+        this.hand = [];
+        this.deck = [];
         this.nickname = null;
         this.id = socket.id;
         this.state = GAME_STATE.WAITING;
@@ -11,6 +13,7 @@ class Player {
         this.health = 10;
         this.energy = 1;
         this.field = [];
+        this.initDeck();
     }
 
     getPlayerState() {
@@ -22,33 +25,27 @@ class Player {
             health: this.health,
             energy: this.energy,
             hand: this.hand,
-            field: this.field
+            field: this.field,
+            deck: this.deck
         }
     }
 
-    initDeck() {
-        this.deck = this.generateDeck();    
-        this.shuffleDeck();                 
-        this.hand = this.deck.splice(0, 3); 
+    async initDeck() {
+        this.deck = await this.generateDeck(); 
+        this.shuffleDeck();   
+        // get 3 cards from the  and put them in the hand
+        for (let i = 0; i < 3; i++) {
+            this.drawCard();
+        }
     }
 
-	generateDeck() {
-		let deck = [];
-		// 3 copias de 1/1: costo 1, ataque 1, defensa 1
-		for (let i = 0; i < 3; i++) {
-			deck.push(new Card(i+1, "Splash Bee", "card1.png", 1, 1, 1));
-		}
-		// 3 copias de 1/2: costo 1, ataque 1, defensa 2
-		for (let i = 0; i < 3; i++) {
-			deck.push(new Card(i+4,"Galactic Goblin", "card2.png", 2, 1, 2));
-		}
-		// 3 copias de 2/1: costo 2, ataque 2, defensa 1
-		for (let i = 0; i < 3; i++) {
-			deck.push(new Card(i+7,"Wukong", "https://9pwbk5xx-3000.uks1.devtunnels.ms/Wukong-card.png", 8, 8, 1));
-		}
-		// 1 copia de 3/3: costo 3, ataque 3, defensa 3
-		deck.push(new Card(10, "Chamilifenix", "https://9pwbk5xx-3000.uks1.devtunnels.ms/card4.png", 3, 3, 3));
-		return deck;
+	async generateDeck() {
+        const userId = this.socket?.request?.user?.userId;
+        const deck = await Deck.findOne({userId});
+        if (!deck) {
+            throw new Error("No deck found in database");
+        }
+        return deck;
 	}
 
     shuffleDeck() {

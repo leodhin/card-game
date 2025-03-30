@@ -1,6 +1,6 @@
 const Player = require('./Player');
 const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../utils/constants');
-const cardAttributes = require('./attributes/cardAttributes');
+const cardPowers = require('./powers/cardPowers');
 
 class Game {
     constructor(io, room) {
@@ -75,17 +75,17 @@ class Game {
     playCard(player, cardId) {
         const cardIndex = player.hand.findIndex(c => c.id === cardId);
         if (cardIndex === -1) {
-            player.socket.emit(SOCKET_EVENTS.ERROR, "Carta no encontrada en la mano");
+            player.socket.emit(SOCKET_EVENTS.ERROR, "Card not found in hand");
             return;
         }
         if (player.field.length > 0) {
-            player.socket.emit('error', "Ya hay una carta en juego");
+            player.socket.emit('error', "There is already a card in the field");
             return;
         }
 
         const card = player.hand[cardIndex];
         if (player.energy < card.cost) {
-            player.socket.emit(SOCKET_EVENTS.ERROR, "No tienes suficiente energía para jugar esta carta");
+            player.socket.emit(SOCKET_EVENTS.ERROR, "You don't have enough energy to play this card");
             return;
         }
         player.energy -= card.cost;
@@ -94,15 +94,14 @@ class Game {
         this.phase = "combat";
         console.log("Card played", card);
 
-        // Apply dynamic attribute effects if any
-        if (card.attribute) {
-
-            // If the attribute property is a string, convert it to an array for iteration
-            const effects = Array.isArray(card.attribute) ? card.attribute : [card.attribute];
+        // Apply dynamic power effects if any
+        if (card.power) {
+            // If the power property is a string, convert it to an array for iteration
+            const effects = Array.isArray(card.power) ? card.power : [card.power];
             const opponent = this.players.find(p => p.id !== player.id);
             effects.forEach(effectKey => {
-                if (cardAttributes[effectKey] && typeof cardAttributes[effectKey].applyEffect === 'function') {
-                    cardAttributes[effectKey].applyEffect(this, player, opponent);
+                if (cardPowers[effectKey] && typeof cardPowers[effectKey].applyEffect === 'function') {
+                    cardPowers[effectKey].applyEffect(this, player, opponent);
                 }
 		});
 	}
@@ -111,7 +110,7 @@ class Game {
 
     attack(attacker, defender) {
         if (!attacker.field.length > 0) {
-            attacker.socket.emit(SOCKET_EVENTS.ERROR, "No puedes atacar sin una carta en el campo");
+            attacker.socket.emit(SOCKET_EVENTS.ERROR, "You cannot attack without a card in the field");
             return;
         }
 
