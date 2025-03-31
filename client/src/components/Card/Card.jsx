@@ -77,7 +77,7 @@ function Card({ card, isDraggable, isActionable, onClick, style, isFaceUp = true
           transform: isTransformed ? 'scale(2.5)' : 'scale(1)', // Scale only the hovered card
           transformOrigin: 'bottom center', // Scale from the bottom center
           backgroundImage: isFaceUp
-            ? `url(/assets/${card?.img})` // Show the front of the card
+            ? `url(${card?.img})` // Show the front of the card
             : `url('/path/to/card-back-image.jpg')`, // Show the back of the card
           backgroundSize: 'cover', // Ensure the image covers the entire div
           backgroundPosition: 'center', // Center the image
