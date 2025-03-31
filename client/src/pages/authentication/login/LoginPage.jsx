@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { login } from "../../../services/auth-service";
+import BackgroundImg from '../../../assets/background-login.png'; // Adjust the path to your 404 image
 
 import "./LoginPage.css";
 
@@ -23,8 +24,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="auth-container">
-      <h1>Login</h1>
+    <div style={{ backgroundImage: `url(${BackgroundImg})`, height: '100vh', backgroundSize: 'cover' }} className="login-page">
       <form onSubmit={handleLogin} className="auth-form">
         <div className="form-group">
           <label htmlFor="email">Email:</label>
