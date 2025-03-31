@@ -12,17 +12,17 @@ function createGameSocket(io) {
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             socket.emit('unauthorized', 'You must be logged in to play');
+        } else {
+            const token = authHeader?.split(' ')[1]; 
+            jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
+                if (err) {
+                    console.error(err);
+                    socket.emit("Authentication error: token expired or invalid");
+                }
+                socket.request.user = decoded;
+                next();
+            });
         }
-    
-        const token = authHeader.split(' ')[1]; 
-        jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
-            if (err) {
-                console.error(err);
-                return next(new Error("Authentication error: Invalid token"));
-            }
-            socket.request.user = decoded;
-            next();
-        });
     });
 
     io.on('connection', (socket) => {
