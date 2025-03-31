@@ -1,0 +1,79 @@
+.deck-generator-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.deck-generator-container h1 {
+  text-align: center;
+  color: #333;
+}
+
+.deck-generator-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #0056b3;
+}
+
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-item {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+}
+
+button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.submit-button {
+  padding: 10px 15px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}

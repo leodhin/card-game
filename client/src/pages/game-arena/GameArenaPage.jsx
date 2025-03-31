@@ -1,34 +1,15 @@
-import card1 from '../../assets/card1.png';
-import card2 from '../../assets/card2.png';
-import card3 from '../../assets/card3.png';
-import card4 from '../../assets/card4.png';
-import card5 from '../../assets/card5.png';
-import card6 from '../../assets/card6.png';
-import card7 from '../../assets/card7.png';
-import card8 from '../../assets/card8.png';
-import card9 from '../../assets/card9.png';
+import React, { useState } from "react";
+import { DndProvider, useDragLayer, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { useLocation } from "react-router-dom";
+import useSocket from "../../hooks/useSocket";
+import Card from "../../components/Card/Card";
+import "./GameArenaPage.css";
+import PageContainer from "../../containers/PageContainer";
 
-import { DndProvider, useDrop, useDragLayer } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useState, useEffect, useRef } from 'react';
-import Card from '../../components/Card/Card';
-import io from 'socket.io-client';
-import { useLocation } from 'react-router-dom';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
-const cards = [
-  { id: 1, name: 'Splash Bee', img: card1, mana: 3, lore: 'A buzzing defender of the hive.' },
-  { id: 2, name: 'Galactic Goblin', img: card2, mana: 5, lore: 'A mischievous traveler of the stars.' },
-  { id: 3, name: 'Chamiligon', img: card3, mana: 2, lore: 'A sneaky creature that blends in anywhere.' },
-  { id: 4, name: 'Chamilifenix', img: card4, mana: 4 },
-  { id: 5, name: 'Chamilisaur', img: card5, mana: 6 },
-  { id: 6, name: 'Chamilisaur', img: card6, mana: 1 },
-  { id: 7, name: 'Chamilisaur', img: card7, mana: 3 },
-  { id: 8, name: 'Chamilisaur', img: card8, mana: 2 },
-  { id: 9, name: 'Chamilisaur', img: card9, mana: 4 },
-];
-
-
-function DroppableArea({ title, onDrop }) {
+function DroppableArea({ title, onDrop, style }) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'CARD',
     drop: (item) => onDrop(item),
@@ -43,6 +24,7 @@ function DroppableArea({ title, onDrop }) {
       className="active-cards"
       style={{
         backgroundColor: isOver ? '#d4edda' : '#f8d7da',
+        ...style,
       }}
     >
       {title}
@@ -78,231 +60,212 @@ function CustomDragLayer() {
   );
 }
 
-const SERVER_URL = "localhost:3000"; // "https://9pwbk5xx-3000.uks1.devtunnels.ms/";
-
 function GameArenaPage() {
-  const socketRef = useRef(null);
+  const location = useLocation();
+  const gameId = location.pathname.split("/").pop();
+  const nickname = localStorage.getItem("nickname");
+
   const [opponentHand, setOpponentHand] = useState([]);
-	const [playerHand, setPlayerHand] = useState([]);
+  const [playerHand, setPlayerHand] = useState([]);
   const [opponentActiveCards, setOpponentActiveCards] = useState([]);
   const [playerActiveCards, setPlayerActiveCards] = useState([]);
-  const [playerCardDeck, setPlayerCardDeck] = useState([]);
-  const [movingCard, setMovingCard] = useState(null);
   const [playerHealth, setPlayerHealth] = useState(0);
-	const [playerEnergy, setPlayerEnergy] = useState(0);
+  const [playerEnergy, setPlayerEnergy] = useState(0);
   const [opponentHealth, setOpponentHealth] = useState(0);
-	const [opponentEnergy, setOpponentEnergy] = useState(0);
+  const [opponentEnergy, setOpponentEnergy] = useState(0);
   const [isMyTurn, setIsMyTurn] = useState(false);
-  const [gamePhase, setGamePhase] = useState('');
+  const [gamePhase, setGamePhase] = useState("");
+  const [drawingCard, setDrawingCard] = useState(null); // Card being animated
 
+  const [opponentStack, setOpponentStack] = useState(
+    Array.from({ length: 10 }, (_, index) => ({
+      id: `opponent-card-${index}`,
+      name: `Opponent Card ${index + 1}`,
+      isFaceUp: false,
+    }))
+  );
 
-  const location = useLocation();
+  const [playerStack, setPlayerStack] = useState(
+    Array.from({ length: 10 }, (_, index) => ({
+      id: `player-card-${index}`,
+      name: `Player Card ${index + 1}`,
+      isFaceUp: false,
+    }))
+  );
 
-  const gameId = location.pathname.split('/').pop();
+  const onGameStateUpdate = (data, socketId) => {
+    console.info("Game state updated:", data);
+    const myPlayer = data.players.find((p) => p.id === socketId);
+    if (myPlayer) {
+      setPlayerHealth(myPlayer.health);
+      setPlayerEnergy(myPlayer.energy);
+      setPlayerHand(myPlayer.hand);
+      setPlayerActiveCards(myPlayer.field);
 
+      const opponent = data.players.find((p) => p.id !== socketId);
+      if (opponent) {
+        setOpponentHand(opponent.hand);
+        setOpponentHealth(opponent.health);
+        setOpponentEnergy(opponent.energy);
+        setOpponentActiveCards(opponent.field);
+      }
 
-  useEffect(() => {
-    const socket = io(SERVER_URL + '/game');
-    socketRef.current = socket;
+      const activePlayer = data.players[data.currentTurn];
+      setGamePhase(data.phase);
 
-    socket.on('connect', () => {
-      console.log('Connected to the server');
-      socket.emit('ping');
-    });
-
-    socket.emit('joinRoom', gameId, localStorage.getItem('nickname'));
-
-    socket.on('syncGameState', (data) => {
-      console.log('syncGameState', data);
-      const myPlayer = data.players.find(p => p.id === socket.id);
-			if (myPlayer) {
-				setPlayerHealth(myPlayer.health);
-				setPlayerEnergy(myPlayer.energy);
-				setPlayerHand(myPlayer.hand);
-        setPlayerActiveCards(myPlayer.field);
-
-        const opponent = data.players.find(p => p.id !== socket.id);
-        if (opponent) {
-          setOpponentHand(opponent.hand);
-          setOpponentHealth(opponent.health);
-          setOpponentEnergy(opponent.energy);
-          setOpponentActiveCards(opponent.field);
-        }
-
-        const activePlayer = data.players[data.currentTurn];
-        setGamePhase(data.phase);
-        
-        if (activePlayer && activePlayer.id === socket.id && data.state === 'playing') {
-          setIsMyTurn(true);
-          if (data.phase === 'draw') {
-            socket.emit('drawCard');
-          } 
-        } else {
-          setIsMyTurn(false);
-        }
-
-			}
-    });
-
-    socket.on('error', (errorMsg) => {
-      alert(errorMsg);
-    });
-
-    // CHAT GAME LOG, (DISCONNECT, CONNECT, USER CHATTING)
-    socket.on('playerConnected', (nickname) => {
-      const message = `${nickname} connected.`;
-    });
-
-    socket.on('playerDisconnected', (nickname) => {
-      const message = ` ${nickname} disconnected.`;
-    });
-
-    socket.on('pong', () => {
-
-    });
-
-    socket.on('state', (data) => {
-      const message = `State of the game  ${data}.`;
-    });
-
-    socket.on('receiveMessage', (player, message) => {
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  const handleCardClick = (card) => {
-    // Set the moving card to trigger the animation
-    setMovingCard(card);
-    // After the animation ends, move the card to the player's active cards
-    setTimeout(() => {
-      setPlayerHand((prev) => [...prev, card]);
-      setPlayerCardDeck((prev) => prev.filter((c) => c.id !== card.id)); // Remove from the deck
-      setMovingCard(null); // Reset the moving card
-    }, 500); // Match the animation duration
+      if (activePlayer && activePlayer.id === socketId && data.state === "playing") {
+        setIsMyTurn(true);
+      } else {
+        setIsMyTurn(false);
+      }
+    }
   };
 
+  const { emitEvent, socket, connecting, error: connectionError } = useSocket(SERVER_URL, gameId, nickname, onGameStateUpdate);
+
   const handleDropOnPlayer = (item) => {
-    // Move the card to the player's active cards
-    //setPlayerActiveCards((prev) => [...prev, item]);
-    //setPlayerHand((prev) => prev.filter((c) => c.id !== item.id));
-    socketRef.current.emit('playCard', item.id);
-  }
+    emitEvent("playCard", item.id);
+  };
+
+
+  const drawCardFromPlayerStack = () => {
+    if (playerStack.length > 0) {
+      const cardToDraw = playerStack[playerStack.length - 1]; // Get the top card
+      setDrawingCard(cardToDraw); // Set the card being animated
+
+      // Remove the card from the stack after the animation
+      setTimeout(() => {
+        setPlayerStack((prevStack) => prevStack.slice(0, -1)); // Remove the card from the stack
+        setPlayerHand((prevHand) => [...prevHand, cardToDraw]); // Add the card to the player's hand
+        setDrawingCard(null); // Clear the animated card
+      }, 1000); // Match the animation duration
+    }
+  };
+
+  const renderStack = (stack) => {
+    return stack.map((card, index) => (
+      <div
+        key={card.id}
+        className="stack-card"
+        style={{
+          position: "absolute",
+          top: `${index * 5}px`, // Offset each card slightly
+          left: `${index * 5}px`,
+          zIndex: index,
+        }}
+      >
+        <Card isFaceUp={false} alt="Card Back" className="stack-card-image" />
+      </div>
+    ));
+  };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <CustomDragLayer />
-      <div className="game-board">
-        {/* Opponent Area */}
-        <div className="opponent-area">
-          <div className="opponent-cards">
-            {Array.from({ length: opponentHand.count }, (_, index) => (
-              <Card key={index} isFaceUp={false} />
-            ))}
+    <PageContainer isLoading={connecting} loadingMessage="Find players ..." error={connectionError}>
+      <DndProvider backend={HTML5Backend}>
+        <CustomDragLayer />
+        <div className="game-board">
+          {/* Opponent Area */}
+          <div className="opponent-area">
+            <div className="opponent-cards">
+              {Array.from({ length: opponentHand.count }, (_, index) => (
+                <Card key={index} isFaceUp={false} />
+              ))}
+            </div>
+            <div className="opponent-hp-mana">
+              <div className="opponent-hp">HP: {opponentHealth}</div>&nbsp;
+              <div className="opponent-mana">Mana: {opponentEnergy}</div>
+            </div>
           </div>
-          <div className="opponent-hp-mana">
-            <div className="opponent-hp">HP: {opponentHealth}</div>&nbsp;
-            <div className="opponent-mana">Mana: {opponentEnergy}</div>
-          </div>
-          <div className="opponent-stack">
-            {Array.from({ length: opponentHand.count }, (_, index) => (
-              <Card
-                key={index}
-                isFaceUp={false}
-                style={{
-                  position: "absolute",
-                  '--stack-offset': `${index * 10}px`,
-                  '--stack-index': index,
-                }}
-              />
-            ))}
-          </div>
-        </div>
 
-        {/* Middle Area */}
-        <div className="middle-area">
-          <div className="active-cards">
-            {opponentActiveCards.length > 0
-              ? opponentActiveCards.map((card) => (
-                <Card key={card.id} card={card} />
-              ))
-              : 'Opponent Active Cards'}
-          </div>
-          <DroppableArea
-            title={
-              playerActiveCards.length > 0
-                ? playerActiveCards.map((card) => (
-                  <Card key={card.id} card={card} isActionable={true} isDraggable={false} />
+          {/** Buttons */}
+          {isMyTurn && (
+            <button
+              className="attack-button"
+              style={{ backgroundColor: 'red', color: 'white', fontWeight: 'bold', margin: '1rem', width: '100px', height: '50px' }}
+              onClick={() => {
+                if (socket) {
+                  console.info("Emitting attack event");
+                  emitEvent('attack');
+                }
+              }}>
+              Attack!
+            </button>
+          )}
+          {isMyTurn && (
+            <button
+              className="attack-button"
+              style={{ backgroundColor: 'grey', color: 'white', fontWeight: 'bold', margin: '1rem', width: '100px', height: '50px' }}
+              onClick={() => {
+                if (socket) {
+                  console.info("Emitting pass event");
+                  emitEvent('pass');
+                }
+              }}>
+              Pass
+            </button>
+          )}
+
+          {/* Middle Area */}
+          <div className="middle-area">
+            <div className="active-cards" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {opponentActiveCards.length > 0
+                ? opponentActiveCards.map((card) => (
+                  <Card key={card.id} card={card} />
                 ))
-                : 'Player Active Cards'
-            }
-            onDrop={handleDropOnPlayer}
-          />
-        </div>
-        {/** Buttons */}
-        {isMyTurn && gamePhase === 'combat' && (
-        <button
-        className="attack-button"
-        style={{ backgroundColor: 'red', color: 'white', fontWeight: 'bold', margin: '1rem', width: '100px', height: '50px' }}
-        onClick={() => {
-				if (socketRef.current) {
-					socketRef.current.emit('attack'); 
-				}
-			}}>
-			Attack!
-      </button>
-      )}
-        {isMyTurn && (gamePhase === 'combat' || gamePhase === 'play') && (
-        <button
-        className="attack-button"
-        style={{ backgroundColor: 'grey', color: 'white', fontWeight: 'bold', margin: '1rem', width: '100px', height: '50px' }}
-        onClick={() => {
-				if (socketRef.current) {
-					socketRef.current.emit('pass'); 
-				}
-			}}>
-			Pass
-      </button>
-      )}
-        
-
-        {/* Player Area */}
-        <div className="player-area">
-          <div className="player-hp-mana">
-            <div className="player-hp">HP: {playerHealth}</div>
-            &nbsp;
-            <div className="player-mana">Mana: {playerEnergy}</div>
+                : "Opponent Active Cards"}
+            </div>
+            <DroppableArea
+              title={
+                playerActiveCards.length > 0
+                  ? playerActiveCards.map((card) => (
+                    <Card key={card.id} card={card} isActionable={true} isDraggable={false} />
+                  ))
+                  : "Player Active Cards"
+              }
+              onDrop={handleDropOnPlayer}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            />
           </div>
-          {isMyTurn && <div className="turn-message">Is your Turn!</div>}
-          {playerHand && playerHand.length > 0 && (
+
+          {/* Player Area */}
+          <div className="player-area">
+            <div className="player-hp-mana">
+              <div className="player-hp">HP: {playerHealth}</div>
+              &nbsp;
+              <div className="player-mana">Mana: {playerEnergy}</div>
+            </div>
             <div className="player-cards">
               {playerHand.map((card) => (
                 <Card key={card.id} card={card} isDraggable={true} isActionable={true} />
               ))}
             </div>
-          )}
-          {playerCardDeck && playerCardDeck.length > 0 && (
-            <div className="player-stack">
-              {playerCardDeck.map((card, index) => (
-                <Card
-                  key={card.id}
-                  card={card}
-                  onClick={() => handleCardClick(card)}
-                  isFaceUp={false}
-                  style={{
-                    position: "absolute",
-                    '--stack-offset': `${index * 10}px`,
-                    '--stack-index': index,
-                  }}
-                />
-              ))}
-            </div>
-          )}
+          </div>
         </div>
-      </div>
-    </DndProvider>
+
+
+        {/* Opponent Stack */}
+        <div className="opponent-stack">
+          <div className="stack-container">{renderStack([])}</div>
+        </div>
+
+        {/* Player Stack */}
+        <div className="player-stack">
+          <div className="stack-container" onClick={drawCardFromPlayerStack}>{renderStack(playerStack)}</div>
+        </div>
+        {/* Animated Card */}
+        {drawingCard && (
+          <div
+            className="animated-card"
+            style={{
+              top: "calc(100% - 200px)", // Start from the stack's position
+              left: "50px", // Adjust to match the stack's position
+            }}
+          >
+            <Card isFaceUp={false} alt="Card Back" className="stack-card-image" />
+          </div>
+        )}
+      </DndProvider>
+    </PageContainer>
   );
 }
 
