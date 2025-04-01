@@ -1,10 +1,15 @@
 import { useDragLayer } from 'react-dnd';
 
+import Card from '../../../components/Card';
+
 function CustomDragLayer() {
-  const { item, isDragging, currentOffset } = useDragLayer((monitor) => ({
+  const {
+    item,
+    isDragging,
+    currentOffset,
+  } = useDragLayer((monitor) => ({
     item: monitor.getItem(),
     isDragging: monitor.isDragging(),
-    initialOffset: monitor.getInitialSourceClientOffset(),
     currentOffset: monitor.getSourceClientOffset(),
   }));
 
@@ -15,16 +20,19 @@ function CustomDragLayer() {
   const { x, y } = currentOffset;
 
   return (
-    <div className="custom-drag-layer">
-      <div
-        className="drag-preview"
-        style={{
-          transform: `translate(${x}px, ${y}px) rotate(-10deg)`,
-          opacity: 1,
-        }}
-      >
-        <img src={item.img} alt={item.name} className="drag-preview-image" />
-      </div>
+    <div
+      style={{
+        position: 'fixed',
+        pointerEvents: 'none',
+        left: 0,
+        top: 0,
+        transform: `translate(${x}px, ${y}px)`,
+        zIndex: 1000,
+      }}
+    >
+      <Card
+        card={item}
+      />
     </div>
   );
 }

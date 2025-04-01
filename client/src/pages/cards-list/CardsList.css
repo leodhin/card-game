@@ -1,20 +1,11 @@
-.cards-list {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  /* Create 5 columns */
-  grid-gap: 20px;
+/* Container for the card matrix */
+.cards-list-matrix {
+  display: flex;
+  flex-wrap: wrap;
+  /* Allow wrapping to the next row */
+  gap: 20px;
   /* Add spacing between cards */
-  justify-items: center;
-  /* Center cards horizontally */
-  align-items: center;
-  /* Center cards vertically */
+  justify-content: center;
+  /* Center the cards horizontally */
   padding: 20px;
-  /* Add padding around the grid */
-}
-
-.card {
-  width: 120px;
-  /* Adjust card width */
-  height: 160px;
-  /* Adjust card height */
 }

@@ -87,7 +87,7 @@ const useSocket = (serverUrl, gameId, nickname, onGameStateUpdate) => {
   const emitEvent = (event, data) => {
     if (socketRef.current) {
       console.info(`Emitting event: ${event}`, data);
-      socketRef.current.emit(event);
+      socketRef.current.emit(event, data);
     }
   };
 

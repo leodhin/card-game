@@ -1,17 +1,17 @@
-import { Navigate } from "react-router";
-import { HeaderElementLayout } from '../components/HeaderElementLayout';
-
+import { Navigate, useLocation } from "react-router-dom";
+import { HeaderElementLayout } from '../containers/Header';
 
 const AuthenticationLayout = (props) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const isAuthenticated = localStorage.getItem('token');
+  const location = useLocation(); // Get the current location
 
   if (!isAuthenticated) {
     return (
-      <Navigate to="/login" state={{ from: location }} replace />
-    )
+      <Navigate to="/login" state={{ from: location.pathname }} replace />
+    );
   }
-  return <HeaderElementLayout title={props.title}>{props.children}</HeaderElementLayout>;
-}
 
+  return <HeaderElementLayout title={props.title}>{props.children}</HeaderElementLayout>;
+};
 
 export default AuthenticationLayout;

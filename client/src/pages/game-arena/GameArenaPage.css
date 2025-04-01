@@ -142,8 +142,8 @@
 
 .opponent-stack {
   position: absolute;
-  top: 0;
-  left: 100px;
+  top: 100px;
+  right: 100px;
 }
 
 /* Action buttons container */

@@ -13,7 +13,6 @@ function CardsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   const fetchCards = async () => {
     try {
       const response = await getCardList();
@@ -29,11 +28,10 @@ function CardsListPage() {
     fetchCards();
   }, []);
 
-
   return (
     <PageContainer isLoading={loading} error={error}>
       <DndProvider backend={HTML5Backend}>
-        <div className="cards-list">
+        <div className="cards-list-matrix">
           {cards.map((card) => (
             <Card key={card.id} card={card} isActionable={true} />
           ))}

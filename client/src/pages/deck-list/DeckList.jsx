@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { listDecks, deleteDeck } from "../../services/deck-service"; // Import deleteDeck
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { listDecks, deleteDeck } from "../../services/deck-service";
 
 import "./DeckList.css";
 import PageContainer from "../../containers/PageContainer";
@@ -8,6 +9,7 @@ function DeckListPage() {
   const [decks, setDecks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const fetchDecks = async () => {
     try {
@@ -34,6 +36,10 @@ function DeckListPage() {
     }
   };
 
+  const handleNavigateToDeck = (deckId) => {
+    navigate(`/deck/${deckId}`); // Navigate to the deck details page
+  };
+
   useEffect(() => {
     fetchDecks();
   }, []);
@@ -44,12 +50,20 @@ function DeckListPage() {
         <h1>Deck List</h1>
         <div className="deck-list">
           {decks.map((deck) => (
-            <div key={deck._id} className="deck-item">
+            <div
+              key={deck._id}
+              className="deck-item"
+              onClick={() => handleNavigateToDeck(deck._id)} // Add click handler
+              style={{ cursor: "pointer" }} // Add pointer cursor for better UX
+            >
               <h2>{deck.name}</h2>
               <p>Cards: {deck.cards.length}</p>
               <button
                 className="delete-deck-button"
-                onClick={() => handleDeleteDeck(deck._id)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent navigation when clicking delete
+                  handleDeleteDeck(deck._id);
+                }}
               >
                 Delete Deck
               </button>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 
 import { login } from "../../../services/auth-service";
 import BackgroundImg from '../../../assets/background-login.png'; // Adjust the path to your 404 image
@@ -10,6 +10,12 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const isAuthenticated = localStorage.getItem('token');
+
+  if (isAuthenticated) {
+    return <Navigate to="/" />;
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,6 +28,7 @@ function LoginPage() {
       alert("Login failed. Please check your credentials.");
     }
   };
+
 
   return (
     <div style={{ backgroundImage: `url(${BackgroundImg})`, height: '100vh', backgroundSize: 'cover' }} className="login-page">
