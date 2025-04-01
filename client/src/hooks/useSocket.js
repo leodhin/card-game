@@ -11,23 +11,34 @@ const useSocket = (serverUrl, gameId, nickname, onGameStateUpdate) => {
     const socket = io(serverUrl + "/game", {
       withCredentials: true,
       extraHeaders: {
-        authorization: `bearer ${myToken}`,
+        authorization: `Bearer ${myToken}`,
       },
     });
+
     socketRef.current = socket;
 
     // Handle connection
     socket.on("connect", () => {
       console.info("Connected to the server");
+      socket.emit("joinRoom", gameId, nickname);
       setConnecting(false); // Connection established
       setError(null); // Clear any previous errors
-      socket.emit("joinRoom", gameId, nickname);
+
     });
 
     // Handle disconnection
     socket.on("disconnect", () => {
       console.info("Disconnected from the server");
-      setConnecting(true); // Connection lost
+      setConnecting(false);
+    });
+
+
+    // unauthorized
+    socket.on("unauthorized", () => {
+      console.info("unauthorized");
+      setConnecting(false);
+      setError("Unauthorized. Please log in again.");
+      window.location.href = '/login';
     });
 
     // Handle connection errors
@@ -70,7 +81,7 @@ const useSocket = (serverUrl, gameId, nickname, onGameStateUpdate) => {
     return () => {
       socket.disconnect();
     };
-  }, [serverUrl, gameId, nickname, onGameStateUpdate]);
+  }, []);
 
   // Emit events to the server
   const emitEvent = (event, data) => {

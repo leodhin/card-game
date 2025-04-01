@@ -22,7 +22,7 @@ function Card({ card, isDraggable, isActionable, onClick, style, isFaceUp = true
 
   const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
     type: 'CARD',
-    item: card,
+    item: { id: card?._id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -72,7 +72,7 @@ function Card({ card, isDraggable, isActionable, onClick, style, isFaceUp = true
         onMouseLeave={() => setIsHovered(false)} // Reset hover state
         className="card"
         style={{
-          opacity: isDragging ? 0 : 1, // Hide the original card when dragging
+          opacity: 1,
           cursor: 'grab',
           transform: isTransformed ? 'scale(2.5)' : 'scale(1)', // Scale only the hovered card
           transformOrigin: 'bottom center', // Scale from the bottom center
@@ -88,7 +88,7 @@ function Card({ card, isDraggable, isActionable, onClick, style, isFaceUp = true
         }}
       >
         {/* Hide the default drag preview */}
-        <DragPreviewImage connect={getEmptyImage} src={card?.img} />
+        <DragPreviewImage connect={getEmptyImage} src={dragPreview} />
 
         {/* Show content only if the card is face up */}
         {isFaceUp && (
