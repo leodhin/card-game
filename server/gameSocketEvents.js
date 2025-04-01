@@ -5,35 +5,43 @@ const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./util
 const { findGamePlayer, isEmpty } = require('./utils/utils');
 
 function createGameSocket(io) {
+    const existing_games = {};
+
     // Place the JWT authentication middleware here:
     io.use((socket, next) => {
         // Get token from handshake.auth or query string
         const authHeader = socket?.handshake?.headers?.authorization || socket.handshake.query.token;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            socket.emit('unauthorized', 'You must be logged in to play');
+            socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'You must be logged in to play');
         } else {
             const token = authHeader?.split(' ')[1]; 
-            jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
-                if (err) {
-                    console.error(err);
-                    socket.emit("Authentication error: token expired or invalid");
-                }
-                socket.request.user = decoded;
-                next();
-            });
+            if (!token) {
+                socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'Authentication error: token expired or invalid');
+            } else {
+                jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
+                    if (err) {
+                        console.error(err);
+                        socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'Authentication error: token expired or invalid')
+                    }
+                    socket.request.user = decoded;
+                    next();
+                });
+            }
+
         }
     });
 
+    
+
     io.on('connection', (socket) => {
 
-        const existing_games = {};
         const userId = socket?.request?.user?.userId;
 
         if (userId) {
             console.log('User connected with userId:', userId, 'and socket id:', socket.id);
         } else {
-            socket.emit('unauthorized', 'You must be logged in to play');
+            socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'You must be logged in to play');
         }
 
         let gameState = [];
@@ -55,25 +63,20 @@ function createGameSocket(io) {
 
             //io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getSanitizedGameState(player.id));
         })
-        socket.on(SOCKET_EVENTS.JOIN_ROOM, (room, nickname) => {
-            let game = existing_games[room];
-
-            // If game doesn't exist, create new one 
-            // otherwise just add add the socket to the game as player
-            if (!game) {
-                let newGame = new Game(io, room);
-                game = newGame
-                existing_games[room] = newGame;
-            } else {
-                if (game.players?.length === 2) {
-                    socket.emit(SOCKET_EVENTS.ERROR, "Game is full or already started");
-                    socket.disconnect();
-                    return;
-                }
+        socket.on(SOCKET_EVENTS.JOIN_ROOM, async (room, nickname) => {
+            if (!existing_games[room]) {
+                console.log('Creating new game:', room);
+                existing_games[room] = new Game(io, room);
             }
-            socket.join(room);
-            game.addPlayer(socket, nickname);
 
+            if (existing_games[room].players?.length === 2) {
+                socket.emit(SOCKET_EVENTS.ERROR, "Game is full or already started");
+                socket.disconnect();
+                return;
+            }
+
+            socket.join(room);
+            await existing_games[room].addPlayer(socket, nickname);
             gameState = existing_games[room];
 
             io.to(room).emit(SOCKET_EVENTS.PLAYER_CONNECTED, nickname || socket.id);
@@ -183,7 +186,6 @@ function createGameSocket(io) {
         getGames() {
             // Ensure existing_games is an object
             if (typeof existing_games !== 'object' || existing_games === null) {
-                console.log("existing games is not an object.");
                 return [];
             }
 
@@ -194,7 +196,7 @@ function createGameSocket(io) {
             const games = gameArray.map((game, index) => {
                 if (game && typeof game.getInfo === 'function') {
                     const info = game.getInfo();
-                    console.log(`game info for game at index ${index}:`, info);
+                    console.log(`Game info for game at index ${index}:`, info);
                     return info;
                 } else {
                     console.error(`Game at index ${index} is not properly initialized or getInfo is not a function.`);

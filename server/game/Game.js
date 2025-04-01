@@ -9,8 +9,6 @@ class Game {
         this.players = [];
         this.state = GAME_STATE.WAITING;
         this.gameInterval = null;
-        this.TICK_RATE = 60;
-        this.GAME_SPEED = 1000 / this.TICK_RATE;
         this.currentTurn = 0;
         this.phase = PHASE_STATE.WAIT;
     }
@@ -26,19 +24,21 @@ class Game {
         return {
             players: this.players.map(player => {
                 const state = player.getPlayerState();
-                if (!Array.isArray(state.hand)) {
-					state.hand = [];
-				}
-                
+    
+                // Sanitize hand
                 if (player.id !== requestingPlayerId) {
-                    state.hand = { count: state.hand ? state.hand.length : 0 };
+                    state.hand = { count: state.hand.length };
                 }
+    
+                // Sanitize deck
+                if (player.id !== requestingPlayerId) {
+                    state.deck = { count: state.deck.length };
+                }
+    
                 return state;
             }),
             state: this.state,
-            tick: this.tick,
-            currentTurn: this.currentTurn,
-            phase: this.phase
+            currentTurn: this.currentTurn
         };
     }
 
@@ -51,10 +51,16 @@ class Game {
 		});
 	}
 
-    addPlayer(socket, nickname) {
+    async addPlayer(socket, nickname) {
         const newPlayer = this.state == GAME_STATE.PLAYING ? new Player(socket) : new Player(socket);
         newPlayer.state = PLAYER_STATE.WAITING;
         newPlayer.nickname = nickname;
+        try{
+            await newPlayer.init();
+        } catch (error) {
+            console.error("Error initializing player", error);
+        }
+
         this.players.push(newPlayer);
         this.syncGameState();
     }
@@ -181,7 +187,6 @@ class Game {
     
             if (allPlayersReady) {
                 for (let player of this.players) {
-                    player.initDeck();
                     player.state = PLAYER_STATE.WAITING;
                 }
             

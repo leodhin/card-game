@@ -5,7 +5,7 @@ class Player {
     constructor(socket) {
         this.socket = socket;
         this.hand = [];
-        this.deck = [];
+        this.deck = {};
         this.nickname = null;
         this.id = socket.id;
         this.state = GAME_STATE.WAITING;
@@ -13,7 +13,6 @@ class Player {
         this.health = 10;
         this.energy = 1;
         this.field = [];
-        this.initDeck();
     }
 
     getPlayerState() {
@@ -30,8 +29,12 @@ class Player {
         }
     }
 
-    async initDeck() {
-        this.deck = await this.generateDeck(); 
+    async init() {
+        const deckDoc = await this.generateDeck();
+        if (deckDoc === null) {
+            throw new Error("Deck not found");
+        }
+        this.deck = deckDoc.cards || [];
         this.shuffleDeck();   
         // get 3 cards from the  and put them in the hand
         for (let i = 0; i < 3; i++) {
@@ -41,9 +44,9 @@ class Player {
 
 	async generateDeck() {
         const userId = this.socket?.request?.user?.userId;
-        const deck = await Deck.findOne({userId});
+        const deck = await Deck.findOne({userId}).populate('cards');
         if (!deck) {
-            throw new Error("No deck found in database");
+            return null;
         }
         return deck;
 	}
@@ -59,7 +62,14 @@ class Player {
         if (this.deck.length > 0) {
             const card = this.deck.shift();
             this.hand.push(card);
+
+            const baseUrl = process.env.FORWARD_URL;
+            if (card.img) {
+                card.img = baseUrl + card.img;
+            }
         }
+
+
     }
 
 }

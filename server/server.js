@@ -43,23 +43,12 @@ const authRoutes = require('./routes/authRoutes');
 const { transcode } = require('buffer');
 app.use('/api/auth', authRoutes);
 
+// socket.io namespaces
 const game_namespace = io.of('/game');
 const gameController = createSocketGame(game_namespace);
 
-io.on('connection', (socket) => {
-	console.log('User connected with socket id:', socket.id);
-	const userId = socket.request.user?.userId;
-	if (userId) {
-		console.log('User connected with userId:', userId, 'and socket id:', socket.id);
-		socket.on('requestRoomList', function () {
-			const games = gameController.getGames();
-			socket.emit('roomList', games);
-
-		});
-	} else {
-		socket.emit('unauthorized', 'You must be logged in to play');
-	}
-});
+//const room_namespace = io.of('/room');
+//const roomController = createSocketLobby(game_namespace);
 
 server.listen(process.env.SERVER_PORT, () => {
 	console.log(`Server is running on port ${process.env.SERVER_PORT}`);

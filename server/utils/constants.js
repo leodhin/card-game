@@ -42,7 +42,8 @@ module.exports.SOCKET_EVENTS = {
   PLAY_CARD: 'playCard', 
   DRAW_CARD: 'drawCard',
   ATTACK: 'attack',
-  PASS: 'pass'
+  PASS: 'pass',
+  UNAUTHORIZED: 'unauthorized'
 };
 
 module.exports.PIXEL_DISTANCE = 5;
