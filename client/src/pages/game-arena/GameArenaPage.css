@@ -1,155 +1,196 @@
-/* General Game Board */
+/* Game board layout */
 .game-board {
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
-  /* Divide the page into three sections: opponent, middle, player */
-  gap: 20px;
-  padding: 20px;
-  background-color: #f4f4f9;
-  /* Light background */
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  grid-template-rows: 2fr 2fr 2fr;
+  /* 2/4 for opponent, 2/4 for active cards, 2/4 for player */
   height: 100vh;
-  /* Full height */
+  width: 100%;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
-/* Opponent Area */
+/* Opponent area */
 .opponent-area {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #ffe6e6;
-  /* Light red background */
-  border: 2px solid #ff4d4d;
-  /* Red border */
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.opponent-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
+  background-color: #f8d7da;
   padding: 10px;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid #ccc;
+  border-radius: 10px;
 }
 
-.opponent-hp-mana {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-.opponent-hp,
-.opponent-mana {
-  background-color: #ffe6e6;
-  padding: 10px 15px;
-  border-radius: 5px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Middle Area */
+/* Middle area (Active Cards) */
 .middle-area {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border: 2px dashed #ccc;
-  border-radius: 10px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-direction: column;
 }
 
-.active-cards {
+/* Opponent Active Cards */
+.middle-area .active-cards {
   flex: 1;
-  text-align: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #ffffff, #f0f8ff);
-  /* Gradient background */
-  border: 2px solid #ddd;
-  border-radius: 15px;
-  /* More rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  /* Subtle shadow */
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  /* Display cards in a column */
+  justify-content: center;
+  align-items: center;
+  background-color: #f8d7da;
+  border: 2px dashed #ccc;
+  padding: 10px;
+  margin: 0 10px;
+  min-height: 150px;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
 }
 
-.active-cards:hover {
-  background: linear-gradient(135deg, #e6f7ff, #ffffff);
-  /* Slightly brighter gradient on hover */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  /* Stronger shadow on hover */
-  transform: scale(1.02);
-  /* Slight zoom effect */
+/* Player Active Cards */
+.middle-area .droppable-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* Display cards in a column */
+  justify-content: center;
+  align-items: center;
+  background-color: #d4edda;
+  border: 2px dashed #ccc;
+  padding: 10px;
+  margin: 0 10px;
+  min-height: 150px;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
 }
 
-.active-cards.is-over {
-  border: 2px solid #00bcd4;
-  /* Highlight border when dragging over */
-  background: linear-gradient(135deg, #e0f7fa, #e6f7ff);
-  /* Light blue gradient */
-  box-shadow: 0 8px 16px rgba(0, 188, 212, 0.4);
-  /* Glowing shadow effect */
-}
-
-/* Player Area */
+/* Player area */
 .player-area {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #e6f7ff;
-  /* Light blue background */
-  border: 2px solid #007bff;
-  /* Blue border */
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.player-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
+  background-color: #d4edda;
   padding: 10px;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid #ccc;
+  border-radius: 10px;
 }
 
-.player-hp-mana {
+/* Player and opponent HP/Mana */
+.player-hp-mana,
+.opponent-hp-mana {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 15px;
-  font-size: 18px;
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
+  margin-bottom: 10px;
 }
 
-.player-hp,
-.player-mana {
-  background-color: #e6f7ff;
-  padding: 10px 15px;
+/* Player and opponent cards */
+.player-cards,
+.opponent-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* Stack container */
+.stack-container {
+  position: relative;
+  width: 100px;
+  height: 150px;
+  cursor: pointer;
+}
+
+/* Stack card styling */
+.stack-card {
+  width: 100%;
+  height: 100%;
+  background-color: #ccc;
   border-radius: 5px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Animated card */
+.animated-card {
+  position: absolute;
+  width: 100px;
+  height: 150px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  animation: moveCard 1s ease-in-out;
+}
+
+/* Animation for card movement */
+@keyframes moveCard {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-200px);
+  }
 }
 
 .player-stack {
   position: absolute;
-  bottom: 250px;
-  left: 10px;
+  bottom: 100px;
+  left: 50px;
+}
+
+.opponent-stack {
+  position: absolute;
+  top: 0;
+  left: 100px;
+}
+
+/* Action buttons container */
+.action-buttons {
+  position: absolute;
+  bottom: 20px;
+  /* Position near the bottom of the screen */
+  right: 20px;
+  /* Position near the right side of the screen */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Space between buttons */
+  z-index: 1000;
+  /* Ensure buttons are on top of other elements */
+}
+
+/* Attack button styling */
+.attack-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  background-color: red;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.attack-button:hover {
+  background-color: darkred;
+}
+
+/* Pass button styling */
+.pass-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  background-color: grey;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pass-button:hover {
+  background-color: darkgrey;
 }

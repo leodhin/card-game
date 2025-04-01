@@ -30,9 +30,9 @@ axiosInstance.interceptors.request.use(
 // Function to handle Axios errors
 const handleAxiosError = (error) => {
   if (error.response?.status === 401 || error.response?.status === 403) {
-    // Clear token or handle unauthorized access
     localStorage.removeItem('token');
-    console.error('Unauthorized or Forbidden:', error.message);
+    // Redirect to the login page
+    window.location.href = '/login';
   } else {
     // Something happened in setting up the request that triggered an Error
     console.error('Error:', error.message);
