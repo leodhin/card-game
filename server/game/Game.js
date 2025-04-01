@@ -31,9 +31,7 @@ class Game {
                 }
     
                 // Sanitize deck
-                if (player.id !== requestingPlayerId) {
-                    state.deck = { count: state.deck.length };
-                }
+                state.deck = { count: state.deck.length };
     
                 return state;
             }),

@@ -23,7 +23,11 @@ router.post('/deck', isLoggedIn, async (req, res) => {
 		// Validate that all provided card IDs exist in the database
 		const Card = require('../models/CardModel');
 		const foundCards = await Card.find({ _id: { $in: cards } });
-		if (foundCards.length !== cards.length) {
+		const foundIds = foundCards.map(c => c._id.toString());
+
+		const allExist = cards.every(id => foundIds.includes(id.toString()));
+		
+		if (!allExist) {
 			return res.status(400).json({ error: 'One or more provided card IDs do not exist' });
 		}
 		

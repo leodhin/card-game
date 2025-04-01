@@ -1,14 +1,19 @@
 class Card {
-	constructor(id, name, img, cost, lore, attack, defense) {
+	constructor(id, name, img, lore, attack, defense) {
 		this.id = id;
 		this.name = name;
 		this.img = img;
-		this.cost = cost;
 		this.lore = lore;
 		this.userId = null;
-		this.attack = attack;
-		this.defense = defense;
-		this.attributes = null;
+		this.attack = Number(attack);;
+		this.defense = Number(defense);
+		this.cost = 0;
+		this.powers = null;
+
+	}
+
+	calculateCardCost() {
+		this.cost = Math.ceil((this.attack * 1.2 + this.defense) / 2);
 	}
 }
 

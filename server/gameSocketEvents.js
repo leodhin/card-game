@@ -171,7 +171,6 @@ function createGameSocket(io) {
 
         socket.on(SOCKET_EVENTS.PASS, () => {
             if (gameState.phase === 'play') {
-                console.log('pass');
                 gameState.phase = 'combat';
                 gameState.syncGameState();
             } else if (gameState.phase === 'combat') {
