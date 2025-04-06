@@ -1,6 +1,6 @@
 const express = require('express');
-const CardPower = require('../models/CardPowerModel');
-const {isLoggedIn} = require('../middleware/requireAuth');
+const CardPower = require('../models/CardPower.model');
+const {isLoggedIn} = require('../middleware/http/requireAuthHTTP');
 
 const router = express.Router();
 

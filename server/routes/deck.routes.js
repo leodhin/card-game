@@ -1,6 +1,7 @@
 const express = require('express');
-const {isLoggedIn} = require('../middleware/requireAuth');
-const Deck = require('../models/DeckModel');
+const {isLoggedIn} = require('../middleware/http/requireAuthHTTP');
+const Deck = require('../models/Deck.model');
+const { updateDeck } = require('../controllers/http/deck.controller');
 const router = express.Router();
 
 router.post('/deck', isLoggedIn, async (req, res) => {
@@ -21,7 +22,7 @@ router.post('/deck', isLoggedIn, async (req, res) => {
 		}
 
 		// Validate that all provided card IDs exist in the database
-		const Card = require('../models/CardModel');
+		const Card = require('../models/Card.model');
 		const foundCards = await Card.find({ _id: { $in: cards } });
 		const foundIds = foundCards.map(c => c._id.toString());
 
@@ -48,21 +49,10 @@ router.post('/deck', isLoggedIn, async (req, res) => {
 	}
 });
 
-router.get('/deck-list/:userId', isLoggedIn, async (req, res) => {
-	try {
-		const { userId } = req.params;
-		const decks = await Deck.find({ userId }).populate('cards');
-		return res.json(decks);
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({ error: 'Error obtaining user decks' });
-	}
-});
-
 router.get('/deck-list', isLoggedIn, async (req, res) => {
 	try {
-		const { userId } = req.params;
-		const decks = await Deck.find({}).populate('cards');
+		const userId  = req.userId;;
+		const decks = await Deck.find({userId}).populate('cards');
 		return res.json(decks);
 	} catch (error) {
 		console.error(error);
@@ -84,20 +74,8 @@ router.get('/deck/:deckId', isLoggedIn, async (req, res) => {
 	}
 });
 
-router.put('/deck/:deckId', isLoggedIn, async (req, res) => {
-	try {
-		const { deckId } = req.params;
-		const { name, cards, createdBy } = req.body;
-		const deck = await Deck.findByIdAndUpdate(deckId, { name, cards, createdBy }, { new: true });
-		if (!deck) {
-			return res.status(404).json({ error: 'Deck not found' });
-		}
-		return res.json(deck);
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({ error: 'Error updating deck' });
-	}
-});
+router.put('/deck/:deckId', isLoggedIn, updateDeck);
+
 
 router.delete('/deck/:deckId', isLoggedIn, async (req, res) => {
 	try {

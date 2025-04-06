@@ -88,11 +88,11 @@ class Game {
         }
 
         const card = player.hand[cardIndex];
-        if (player.energy < card.cost) {
-            player.socket.emit(SOCKET_EVENTS.ERROR, "You don't have enough energy to play this card");
+        if (player.mana < card.cost) {
+            player.socket.emit(SOCKET_EVENTS.ERROR, "You don't have enough mana to play this card");
             return;
         }
-        player.energy -= card.cost;
+        player.mana -= card.cost;
         player.field.push(card);
         player.hand.splice(cardIndex, 1);
         this.phase = "combat";
@@ -164,7 +164,7 @@ class Game {
         const currentPlayer = this.players[this.currentTurn];
 
         this.phase = PHASE_STATE.DRAW;
-        currentPlayer.energy += 1;
+        currentPlayer.regenerateMana();
         currentPlayer.drawCard();
         this.syncGameState();
 
@@ -219,13 +219,11 @@ class Game {
     endGame() {
         this.io.to(this.name).emit(SOCKET_EVENTS.GAME_OVER);
         this.state = GAME_STATE.FINISHED;
-        clearInterval(this.gameInterval);
 
         setTimeout(()=>{
             for (const player of this.players) {
                 player.state = PLAYER_STATE.WAITING;
             }
-            this.io.to(this.name).emit(SOCKET_EVENTS.CLEAR);
             this.syncGameState();
         },3000); 
     }

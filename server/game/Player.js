@@ -1,5 +1,5 @@
 const { GAME_STATE } = require('../utils/constants');
-const Deck = require('../models/DeckModel');
+const Deck = require('../models/Deck.model');
 
 class Player {
     constructor(socket) {
@@ -11,7 +11,7 @@ class Player {
         this.state = GAME_STATE.WAITING;
         this.gameId = {};
         this.health = 10;
-        this.energy = 1;
+        this.mana = 1;
         this.field = [];
     }
 
@@ -22,13 +22,14 @@ class Player {
             state: this.state,
             gameId: this.gameId,
             health: this.health,
-            energy: this.energy,
+            energy: this.mana,
             hand: this.hand,
             field: this.field,
             deck: this.deck
         }
     }
 
+    
     async init() {
         const deckDoc = await this.generateDeck();
         if (deckDoc === null) {
@@ -50,6 +51,10 @@ class Player {
         }
         return deck;
 	}
+
+    regenerateMana() {
+        this.mana = Math.max(this.mana * 2, 1);
+    }
 
     shuffleDeck() {
 		for (let i = this.deck.length - 1; i > 0; i--) {

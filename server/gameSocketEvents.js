@@ -3,38 +3,19 @@ const jwt = require('jsonwebtoken');
 
 const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./utils/constants');
 const { findGamePlayer, isEmpty } = require('./utils/utils');
+const { verifySocketAuth } = require('./middleware/socket/requireAuthSocket');
+const GameController = require('./controllers/socket/gamecontroller');
+const Matchmaker = require('./matchmaker');
 
 function createGameSocket(io) {
+    const gameNamespace = io.of('/game');
     const existing_games = {};
+    const gameController = new GameController(gameNamespace);
+    const matchmaker = new Matchmaker(gameController);
 
-    // Place the JWT authentication middleware here:
-    io.use((socket, next) => {
-        // Get token from handshake.auth or query string
-        const authHeader = socket?.handshake?.headers?.authorization || socket.handshake.query.token;
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'You must be logged in to play');
-        } else {
-            const token = authHeader?.split(' ')[1]; 
-            if (!token) {
-                socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'Authentication error: token expired or invalid');
-            } else {
-                jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
-                    if (err) {
-                        console.error(err);
-                        socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'Authentication error: token expired or invalid')
-                    }
-                    socket.request.user = decoded;
-                    next();
-                });
-            }
-
-        }
-    });
-
+    gameNamespace.use(verifySocketAuth);
     
-
-    io.on('connection', (socket) => {
+    gameNamespace.on('connection', (socket) => {
 
         const userId = socket?.request?.user?.userId;
 
@@ -61,12 +42,12 @@ function createGameSocket(io) {
                 next();
             }
 
-            //io.to(gameState.name).emit(SOCKET_EVENTS.SYNC_GAME_STATE, gameState.getSanitizedGameState(player.id));
         })
+        
         socket.on(SOCKET_EVENTS.JOIN_ROOM, async (room, nickname) => {
             if (!existing_games[room]) {
                 console.log('Creating new game:', room);
-                existing_games[room] = new Game(io, room);
+                existing_games[room] = new Game(gameNamespace, room);
             }
 
             if (existing_games[room].players?.length === 2) {
@@ -79,7 +60,7 @@ function createGameSocket(io) {
             await existing_games[room].addPlayer(socket, nickname);
             gameState = existing_games[room];
 
-            io.to(room).emit(SOCKET_EVENTS.PLAYER_CONNECTED, nickname || socket.id);
+            gameNamespace.to(room).emit(SOCKET_EVENTS.PLAYER_CONNECTED, nickname || socket.id);
 
             if (gameState.players.length === 2 && gameState.state === GAME_STATE.WAITING) {
                 gameState.players.forEach(player => {
@@ -87,7 +68,7 @@ function createGameSocket(io) {
                 });
                 gameState.startGame();
             }
-        });
+        })
 
         socket.on('disconnect', () => {
             socket.leaveAll(); // This ensure socket leaves all rooms
@@ -97,7 +78,7 @@ function createGameSocket(io) {
 
             gameState.removePlayer(socket);
 
-            io.to(gameState.name).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, playerRemoved.nickname);
+            gameNamespace.to(gameState.name).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, playerRemoved.nickname);
 
             for (const gameId in existing_games) {
                 if (existing_games[gameId].players.length === 0) {
@@ -106,39 +87,15 @@ function createGameSocket(io) {
             }
         })
 
-        socket.on(SOCKET_EVENTS.READY, () => {
-            const player = findGamePlayer(gameState.players, socket);
-            player.state = 'ready';
-            gameState.startGame();
-        });
 
-
-        socket.on(SOCKET_EVENTS.PAUSE, () => {
-            if (gameState.state === GAME_STATE.PLAYING) {
-                gameState.state = GAME_STATE.PAUSED;
-                io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
-            }
-        });
-
-        socket.on(SOCKET_EVENTS.RESUME, () => {
-            if (gameState.state === GAME_STATE.PAUSED) {
-                gameState.state = GAME_STATE.PLAYING;
-                io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
-            }
-        });
-
-        socket.on(SOCKET_EVENTS.END, () => {
-            gameState.state = GAME_STATE.FINISHED;
-            io.to(gameState.name).emit(SOCKET_EVENTS.STATE, gameState.syncGameState(player.id));
-        });
-
+        // Ping pong
         socket.on(SOCKET_EVENTS.PING, () => {
             socket.emit(SOCKET_EVENTS.PONG);
         });
 
         socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
             var player = findGamePlayer(gameState.players, socket);
-            io.to(gameState.name).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, player.getPlayerState(), message);
+            gameNamespace.to(gameState.name).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, player.getPlayerState(), message);
         });
 
         socket.on(SOCKET_EVENTS.ATTACK, () => {
