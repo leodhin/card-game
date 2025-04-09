@@ -30,6 +30,7 @@ axiosInstance.interceptors.request.use(
 // Function to handle Axios errors
 const handleAxiosError = (error) => {
   if (error.response?.status === 401 || error.response?.status === 403) {
+    console.error('Unauthorized access - redirecting to login');
     localStorage.removeItem('token');
     // Redirect to the login page
     window.location.href = '/login';

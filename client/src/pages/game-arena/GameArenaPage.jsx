@@ -89,36 +89,44 @@ function GameArenaPage() {
     ));
   };
   return (
-    <PageContainer isLoading={connecting} loadingMessage="Finding players..." error={connectionError}>
+    <PageContainer
+      isLoading={connecting}
+      loadingMessage="Finding players..."
+      error={connectionError}
+    >
       <DndProvider backend={HTML5Backend}>
         <CustomDragLayer />
         <div className="game-board">
+          {/* Opponent Area */}
           <OpponentArea
             cards={opponentHand}
             opponentHealth={opponentHealth}
             opponentEnergy={opponentEnergy}
+            isActive={!isMyTurn} // Highlight opponent area if it's their turn
           />
+
+          {/* Middle Area */}
           <MiddleArea
             opponentActiveCards={opponentActiveCards}
             playerActiveCards={playerActiveCards}
             handleDropOnPlayer={handleDropOnPlayer}
           />
+
+          {/* Player Area */}
           <PlayerArea
             playerHand={playerHand}
             playerHealth={playerHealth}
             playerEnergy={playerEnergy}
+            isActive={isMyTurn} // Highlight player area if it's their turn
           />
         </div>
 
-
+        {/* Action Buttons */}
         {isMyTurn && (
-          <ActionButtons
-            emitEvent={emitEvent}
-            socket={socket}
-          />
+          <ActionButtons emitEvent={emitEvent} socket={socket} />
         )}
 
-        {/* Opponent Stack  */}
+        {/* Opponent Stack */}
         <div className="opponent-stack">
           <div className="stack-container">{renderStack(opponentStack)}</div>
         </div>
@@ -127,7 +135,6 @@ function GameArenaPage() {
         <div className="player-stack">
           <div className="stack-container">{renderStack(playerStack)}</div>
         </div>
-
       </DndProvider>
     </PageContainer>
   );

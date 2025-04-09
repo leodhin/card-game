@@ -1,14 +1,15 @@
-import React, { useState } from "react";
-import Card from "../../components/Card"; // Import the Card component
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Card from "../../components/Card";
 
-import { createCard } from "../../services/card-service";
+import { createCard, getCardById, updateCard } from "../../services/card-service";
 import PageContainer from "../../containers/PageContainer";
 
-import "./CardGenerator.css"; // Import the CSS file for styling
+import "./CardGenerator.css";
 
 const CardGeneratorPage = () => {
+  const { cardId } = useParams(); // Get the card ID from the URL
+  const navigate = useNavigate();
   const [cardData, setCardData] = useState({
     name: "",
     img: "",
@@ -17,6 +18,27 @@ const CardGeneratorPage = () => {
     cost: 0,
     lore: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (cardId) {
+      // If an ID is present, fetch the card data for editing
+      const fetchCard = async () => {
+        setLoading(true);
+        try {
+          const response = await getCardById(cardId);
+          setCardData(response);
+        } catch (err) {
+          setError("Failed to load card data.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchCard();
+    }
+  }, [cardId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,37 +65,44 @@ const CardGeneratorPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      name: cardData.name,
-      attack: cardData.attack,
-      defense: cardData.defense,
-      cost: cardData.cost,
-      lore: cardData.lore,
-      img: cardData.img, // Base64-encoded image
-    };
-
     try {
-      await createCard(payload);
-      alert("Card successfully submitted!");
+      if (cardId) {
+        // Update existing card
+        await updateCard(cardId, cardData);
+        alert("Card successfully updated!");
+      } else {
+        // Create new card
+        await createCard(cardData);
+        alert("Card successfully created!");
+      }
+      navigate("/card-list"); // Redirect to the card list page
     } catch (error) {
       console.error("Error submitting card data:", error);
       alert("Failed to submit card. Please try again.");
     }
   };
 
+  if (loading) {
+    return <PageContainer isLoading={true} loadingMessage="Loading card data..." />;
+  }
+
+  if (error) {
+    return <PageContainer error={error} />;
+  }
+
   return (
     <PageContainer>
       <div className="card-generator-grid">
         {/* Left Side: Card Preview */}
         <div className="card-preview">
-          <DndProvider backend={HTML5Backend}>
-            <Card card={cardData} />
-          </DndProvider>
+          <Card card={cardData} />
         </div>
 
         {/* Right Side: Input Form */}
         <div className="card-form">
-          <h1 className="card-generator-title">Card Generator</h1>
+          <h1 className="card-generator-title">
+            {cardId ? "Edit Card" : "Create New Card"}
+          </h1>
           <form onSubmit={handleSubmit} className="card-generator-form">
             <div className="form-group">
               <label htmlFor="name">Card Name:</label>
@@ -140,7 +169,7 @@ const CardGeneratorPage = () => {
               />
             </div>
             <button type="submit" className="submit-button">
-              Generate Card
+              {cardId ? "Update Card" : "Generate Card"}
             </button>
           </form>
         </div>

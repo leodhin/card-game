@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { updateDeck, getDeck } from "../../services/deck-service";
-import Card from "../../components/Card";
+import PageContainer from "../../containers/PageContainer";
 
 function DeckDetailsPage() {
   const { deckId } = useParams(); // Get the deck ID from the URL
-  const [deckDetails, setDeckDetails] = useState(null);
+  const [deckDetails, setDeckDetails] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [cards, setCards] = useState([]);
 
   useEffect(() => {
@@ -17,6 +18,8 @@ function DeckDetailsPage() {
         setCards(deck.cards || []);
       } catch (error) {
         console.error("Error fetching deck details:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -40,97 +43,86 @@ function DeckDetailsPage() {
     }
   };
 
-  const handleAddCard = () => {
-    const newCard = {
-      name: "New Card",
-      img: "default-card.png", // Placeholder image
-      attack: 0,
-      defense: 0,
-    };
-    setCards([...cards, newCard]);
-  };
-
   const handleDeleteCard = (index) => {
     const updatedCards = cards.filter((_, i) => i !== index);
     setCards(updatedCards);
   };
 
-  if (!deckDetails) {
-    return <p>Loading deck details...</p>;
-  }
-
   return (
-    <div>
+    <PageContainer isLoading={isLoading}>
       <h1>Deck Details</h1>
-      <p>Deck Name: {deckDetails.name}</p>
+      <p>Deck Name: {deckDetails?.name}</p>
       <p>Deck ID: {deckId}</p>
       <div>
         <h2>Cards</h2>
-        <button onClick={handleAddCard} style={{ marginBottom: "20px" }}>
-          Add New Card
-        </button>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-          {cards.map((card, index) => (
-            <div
-              key={card._id}
-              style={{
-                border: "1px solid #ccc",
-                padding: "10px",
-                borderRadius: "5px",
-                position: "relative",
-              }}
-            >
-              <Card card={card} isFaceUp={true} />
-              <div style={{ marginTop: "10px" }}>
-                <label>
-                  Name:
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Name</th>
+              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Image</th>
+              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Attack</th>
+              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Defense</th>
+              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cards.map((card, index) => (
+              <tr key={`${card?._id || "card"}-${index}`}>
+                <td style={{ border: "1px solid #ccc", padding: "10px" }}>
                   <input
                     type="text"
                     value={card.name}
                     onChange={(e) => handleCardChange(index, "name", e.target.value)}
+                    style={{ width: "100%" }}
                   />
-                </label>
-                <label>
-                  Attack:
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
+                  <img
+                    src={card.img}
+                    alt={card.name}
+                    style={{ width: "50px", height: "auto" }}
+                  />
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "10px" }}>
                   <input
                     type="number"
                     value={card.attack}
                     onChange={(e) => handleCardChange(index, "attack", e.target.value)}
+                    style={{ width: "100%" }}
                   />
-                </label>
-                <label>
-                  Defense:
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "10px" }}>
                   <input
                     type="number"
                     value={card.defense}
                     onChange={(e) => handleCardChange(index, "defense", e.target.value)}
+                    style={{ width: "100%" }}
                   />
-                </label>
-              </div>
-              <button
-                onClick={() => handleDeleteCard(index)}
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                  background: "red",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  padding: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
+                </td>
+                <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
+                  <button
+                    onClick={() => handleDeleteCard(index)}
+                    style={{
+                      background: "red",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      padding: "5px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       <button onClick={handleSaveDeck} style={{ marginTop: "20px" }}>
         Save Deck
       </button>
-    </div>
+    </PageContainer>
   );
 }
 

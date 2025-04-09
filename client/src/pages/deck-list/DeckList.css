@@ -1,40 +1,62 @@
-.deck-list-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-}
-
-.deck-list-container h1 {
-  text-align: center;
-  color: #333;
-}
-
 .deck-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  color: black;
 }
 
 .deck-item {
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
 
-.deck-item h2 {
-  margin: 0;
+.deck-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.deck-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.deck-header h2 {
   font-size: 18px;
-  color: #0056b3;
+  margin: 0;
 }
 
-.deck-item p {
-  margin: 5px 0 0;
+.delete-deck-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
   font-size: 14px;
-  color: #555;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-deck-button:hover {
+  background-color: #d9363e;
+}
+
+.deck-preview {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.deck-preview-card {
+  width: 50px;
+  height: 70px;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid #ddd;
 }

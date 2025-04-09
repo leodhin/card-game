@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { MoreVert } from '@mui/icons-material';
+import { isEmpty } from 'lodash';
 
 import BackCardPNG from '../../assets/back-card.png';
-
 import './Card.css';
 
-function Card({ card, isFaceUp = true, onClick, style }) {
+function Card({ card, isFaceUp = true, onClick, style, onEdit, onDelete }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isTransformed] = useState(false);
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
@@ -21,12 +22,16 @@ function Card({ card, isFaceUp = true, onClick, style }) {
     setRotate({ x: 0, y: 0 });
   };
 
+  const toggleMenu = (e) => {
+    e.stopPropagation(); // Prevent triggering card click
+  };
+
   return (
     <motion.div
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       animate={isTransformed && { rotateX: rotate.y, rotateY: rotate.x }}
-      transition={{ type: "spring", stiffness: 200, damping: 100 }}
+      transition={{ type: 'spring', stiffness: 200, damping: 100 }}
       style={{ perspective: 1000 }}
     >
       <div
@@ -35,7 +40,6 @@ function Card({ card, isFaceUp = true, onClick, style }) {
         onMouseLeave={() => setIsHovered(false)}
         className="card"
         style={{
-          cursor: 'grab',
           transform: isTransformed ? 'scale(2.5)' : 'scale(1)',
           transformOrigin: 'bottom center',
           backgroundImage: isFaceUp
@@ -49,6 +53,17 @@ function Card({ card, isFaceUp = true, onClick, style }) {
           ...style,
         }}
       >
+        {/* Three Dots Menu */}
+        {(onEdit || onDelete) && (
+          <div className="card-menu">
+            <MoreVert className="menu-icon" onClick={toggleMenu} />
+            <div className="menu-dropdown">
+              <button onClick={onEdit}>Edit</button>
+              <button onClick={onDelete}>Delete</button>
+            </div>
+          </div>
+        )}
+
         {isFaceUp && (
           <>
             <div className="mana-display">{card?.cost}</div>
@@ -61,7 +76,7 @@ function Card({ card, isFaceUp = true, onClick, style }) {
           </>
         )}
       </div>
-    </motion.div >
+    </motion.div>
   );
 }
 
