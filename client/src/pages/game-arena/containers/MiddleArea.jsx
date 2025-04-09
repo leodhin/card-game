@@ -1,6 +1,6 @@
 import React from "react";
 import { useDrop } from "react-dnd";
-import Card from "../../../components/Card/Card";
+import Card, { DraggableCard } from "../../../components/Card";
 
 
 function DroppableArea({ title, onDrop, style }) {
@@ -40,7 +40,7 @@ function MiddleArea({ opponentActiveCards, playerActiveCards, handleDropOnPlayer
         title={
           playerActiveCards.length > 0
             ? playerActiveCards.map((card) => (
-              <Card key={card.id} card={card} isActionable={true} isDraggable={false} />
+              <DraggableCard key={card.id} card={card} isActionable={true} isDraggable={false} />
             ))
             : "Player Active Cards"
         }

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { getCardList } from "../../services/card-service";
 import { createDeck } from "../../services/deck-service";
 import PageContainer from "../../containers/PageContainer";
+import Card from "../../components/Card";
+
 import "./DeckGeneratorPage.css";
 
 const DeckGeneratorPage = () => {
@@ -10,8 +12,6 @@ const DeckGeneratorPage = () => {
   const [selectedCards, setSelectedCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const cardSelectRef = useRef(null);
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -32,18 +32,12 @@ const DeckGeneratorPage = () => {
     setDeckName(e.target.value);
   };
 
-  const handleAddCardToDeck = () => {
-    const selectedCardId = cardSelectRef.current.value;
-
-
-    const cardToAdd = availableCards.find((card) => String(card._id) === selectedCardId);
-    setSelectedCards((prevCards) => [...prevCards, cardToAdd]);
+  const handleAddCardToDeck = (card) => {
+    setSelectedCards((prevCards) => [...prevCards, card]);
   };
 
-  const handleRemoveCardFromDeck = (cardId) => {
-    setSelectedCards((prevCards) =>
-      prevCards.filter((card) => card.id !== cardId)
-    );
+  const handleRemoveCardFromDeck = (index) => {
+    setSelectedCards((prevCards) => prevCards.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -55,8 +49,7 @@ const DeckGeneratorPage = () => {
     };
 
     try {
-      const response = createDeck(payload);
-
+      const response = await createDeck(payload);
       console.log("Deck Created:", response);
       alert("Deck successfully created!");
     } catch (error) {
@@ -65,11 +58,25 @@ const DeckGeneratorPage = () => {
     }
   };
 
+  const handlePostDeck = async () => {
+    const payload = {
+      name: deckName,
+      cards: selectedCards.map((card) => card._id), // Send only card IDs
+    };
+
+    try {
+      const response = await createDeck(payload); // Replace with your post logic
+      console.log("Deck Posted:", response);
+      alert("Deck successfully posted!");
+    } catch (error) {
+      console.error("Error posting deck:", error);
+      alert("Failed to post deck. Please try again.");
+    }
+  };
 
   return (
     <PageContainer isLoading={loading} error={error}>
       <div className="deck-generator-container">
-        <h1>Deck Generator</h1>
         <form onSubmit={handleSubmit} className="deck-generator-form">
           <div className="form-group">
             <label htmlFor="deckName">Deck Name:</label>
@@ -79,49 +86,45 @@ const DeckGeneratorPage = () => {
               name="deckName"
               value={deckName}
               onChange={handleDeckNameChange}
-              placeholder="Enter the deck's name"
+              placeholder="Enter deck name"
               required
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="cardSelect">Select a Card:</label>
-            <select id="cardSelect" ref={cardSelectRef}>
-              <option value="" disabled>
-                -- Select a Card --
-              </option>
-              {availableCards.map((card) => (
-                <option key={card._id} value={card._id}>
-                  {card.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="add-card-button"
-              onClick={handleAddCardToDeck}
-            >
-              Add to Deck
-            </button>
-          </div>
-          <div className="selected-cards">
-            <h2>Selected Cards</h2>
-            <div className="cards-list">
-              {selectedCards.map((card) => (
-                <div key={card.id} className="card-item">
-                  <p>{card.name}</p>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveCardFromDeck(card.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
+          <div className="deck-builder">
+            <div className="available-cards">
+              <h2>Available Cards</h2>
+              <div className="cards-grid">
+                {availableCards.map((card) => (
+                  <Card card={card} key={card._id} onClick={() => handleAddCardToDeck(card)} />
+                ))}
+              </div>
+            </div>
+            <div className="selected-cards">
+              <h2>Selected Cards</h2>
+              <div className="cards-grid">
+                {selectedCards.map((card, index) => (
+                  <Card card={card} key={`${card._id}-${index}`} onClick={() => handleRemoveCardFromDeck(index)} />
+                ))}
+              </div>
+              <button
+                type="button"
+                className="post-deck-button"
+                onClick={handlePostDeck}
+                style={{
+                  marginTop: "20px",
+                  padding: "10px 20px",
+                  fontSize: "14px",
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                Post Deck
+              </button>
             </div>
           </div>
-          <button type="submit" className="submit-button">
-            Create Deck
-          </button>
         </form>
       </div>
     </PageContainer>

@@ -1,5 +1,5 @@
 import React from "react";
-import Card from "../../../components/Card";
+import { DraggableCard } from "../../../components/Card";
 
 function PlayerArea({ playerHand, playerHealth, playerEnergy }) {
   return (
@@ -10,7 +10,7 @@ function PlayerArea({ playerHand, playerHealth, playerEnergy }) {
       </div>
       <div className="player-cards">
         {playerHand.map((card, index) => (
-          <Card
+          <DraggableCard
             key={card.id || `player-card-${index}`}
             isFaceUp={true}
             card={card}

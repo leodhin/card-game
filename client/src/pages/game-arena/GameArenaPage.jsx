@@ -9,8 +9,10 @@ import PlayerArea from "./containers/PlayerArea";
 import MiddleArea from "./containers/MiddleArea";
 import ActionButtons from "./containers/ActionButtons";
 import CustomDragLayer from "./components/CustomDragLayer";
-import Card from "../../components/Card/Card";
+import Card from "../../components/Card";
+
 import "./GameArenaPage.css";
+import { m } from "framer-motion";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
@@ -29,16 +31,16 @@ function GameArenaPage() {
   const [opponentEnergy, setOpponentEnergy] = useState(0);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [gamePhase, setGamePhase] = useState("");
-  const [playerStack, setPlayerStack] = useState(
-    Array.from({ length: 10 }, (_, index) => ({
-      id: `player-card-${index}`,
-      name: `Player Card ${index + 1}`,
-      isFaceUp: false,
-    }))
-  );
+  const [playerStack, setPlayerStack] = useState([]);
+  const [opponentStack, setOpponentStack] = useState([]);
 
   const onGameStateUpdate = (data, socketId) => {
     const myPlayer = data.players.find((p) => p.id === socketId);
+    const enemyPlayer = data.players.find((p) => p.id !== socketId);
+
+    setPlayerStack(myPlayer.deck);
+    setOpponentStack(enemyPlayer.deck);
+
     if (myPlayer) {
       setPlayerHealth(myPlayer.health);
       setPlayerEnergy(myPlayer.energy);
@@ -67,18 +69,18 @@ function GameArenaPage() {
   const { emitEvent, socket, connecting, error: connectionError } = useSocket(SERVER_URL, gameId, nickname, onGameStateUpdate);
 
   const handleDropOnPlayer = (item) => {
-    emitEvent("playCard", item.id);
+    emitEvent("playCard", item?.id);
   };
 
   const renderStack = (stack) => {
-    return stack.map((card, index) => (
+    return Array.from({ length: stack?.count }).map((_, index) => (
       <div
-        key={card.id}
+        key={`stack-card-${index}`}
         className="stack-card"
         style={{
           position: "absolute",
-          top: `${index * 5}px`, // Offset each card slightly
-          left: `${index * 5}px`,
+          top: `${index * 2}px`, // Offset each card slightly
+          left: `${index * 2}px`,
           zIndex: index,
         }}
       >
@@ -86,47 +88,53 @@ function GameArenaPage() {
       </div>
     ));
   };
-
   return (
-    <PageContainer isLoading={connecting} loadingMessage="Finding players..." error={connectionError}>
+    <PageContainer
+      isLoading={connecting}
+      loadingMessage="Finding players..."
+      error={connectionError}
+    >
       <DndProvider backend={HTML5Backend}>
         <CustomDragLayer />
         <div className="game-board">
+          {/* Opponent Area */}
           <OpponentArea
             cards={opponentHand}
             opponentHealth={opponentHealth}
             opponentEnergy={opponentEnergy}
+            isActive={!isMyTurn} // Highlight opponent area if it's their turn
           />
+
+          {/* Middle Area */}
           <MiddleArea
             opponentActiveCards={opponentActiveCards}
             playerActiveCards={playerActiveCards}
             handleDropOnPlayer={handleDropOnPlayer}
           />
+
+          {/* Player Area */}
           <PlayerArea
             playerHand={playerHand}
             playerHealth={playerHealth}
             playerEnergy={playerEnergy}
+            isActive={isMyTurn} // Highlight player area if it's their turn
           />
         </div>
 
-
+        {/* Action Buttons */}
         {isMyTurn && (
-          <ActionButtons
-            emitEvent={emitEvent}
-            socket={socket}
-          />
+          <ActionButtons emitEvent={emitEvent} socket={socket} />
         )}
 
-        {/* Opponent Stack
+        {/* Opponent Stack */}
         <div className="opponent-stack">
-          <div className="stack-container">{renderStack([])}</div>
+          <div className="stack-container">{renderStack(opponentStack)}</div>
         </div>
-        */}
-        {/* Player Stack 
+
+        {/* Player Stack */}
         <div className="player-stack">
           <div className="stack-container">{renderStack(playerStack)}</div>
         </div>
-        */}
       </DndProvider>
     </PageContainer>
   );

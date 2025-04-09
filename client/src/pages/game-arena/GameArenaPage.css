@@ -1,9 +1,7 @@
-/* Game board layout */
 .game-board {
   display: grid;
   grid-template-rows: 2fr 2fr 2fr;
-  /* 2/4 for opponent, 2/4 for active cards, 2/4 for player */
-  height: 100vh;
+  height: 100%;
   width: 100%;
   gap: 10px;
   box-sizing: border-box;
@@ -142,8 +140,8 @@
 
 .opponent-stack {
   position: absolute;
-  top: 0;
-  left: 100px;
+  top: 100px;
+  right: 100px;
 }
 
 /* Action buttons container */
