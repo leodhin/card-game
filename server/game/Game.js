@@ -3,36 +3,27 @@ const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../uti
 const cardPowers = require('./powers/cardPowers');
 
 class Game {
-    constructor(io, room) {
-        this.io = io;
-        this.name = room;
+    constructor(gameId) {
+        this.gameId = gameId;
         this.players = [];
         this.state = GAME_STATE.WAITING;
-        this.gameInterval = null;
         this.currentTurn = 0;
         this.phase = PHASE_STATE.WAIT;
-    }
-
-    getInfo() {
-        return {
-            players: this.players.length,
-            name: this.name,
-        }
     }
 
     getSanitizedGameState(requestingPlayerId) {
         return {
             players: this.players.map(player => {
                 const state = player.getPlayerState();
-    
+
                 // Sanitize hand
                 if (player.id !== requestingPlayerId) {
                     state.hand = { count: state.hand.length };
                 }
-    
+
                 // Sanitize deck
                 state.deck = { count: state.deck.length };
-    
+
                 return state;
             }),
             state: this.state,
@@ -40,40 +31,26 @@ class Game {
         };
     }
 
-	syncGameState() {
-		this.players.forEach(player => {
-			player.socket.emit(
-				SOCKET_EVENTS.SYNC_GAME_STATE,
-				this.getSanitizedGameState(player.id)
-			);
-		});
-	}
+    syncGameState() {
+        this.players.forEach(player => {
+            player.socket.emit(
+                SOCKET_EVENTS.SYNC_GAME_STATE,
+                this.getSanitizedGameState(player.id)
+            );
+        });
+    }
 
-    async addPlayer(socket, nickname) {
-        const newPlayer = this.state == GAME_STATE.PLAYING ? new Player(socket) : new Player(socket);
+    async addPlayer(userId) {
+        const newPlayer = this.state == GAME_STATE.PLAYING ? new Player(userId) : new Player(userId);
         newPlayer.state = PLAYER_STATE.WAITING;
-        newPlayer.nickname = nickname;
-        try{
+        try {
             await newPlayer.init();
         } catch (error) {
             console.error("Error initializing player", error);
         }
 
         this.players.push(newPlayer);
-        this.syncGameState();
-    }
 
-    removePlayer(playerDisconnectedSocket) {
-        if (playerDisconnectedSocket) {
-            var playerLeft = this.players.filter(player => player.id == playerDisconnectedSocket.id)[0];
-            this.players = this.players.filter(player => player.id !== playerDisconnectedSocket.id);
-            
-            if (this.players.length < 2) {
-                this.state = GAME_STATE.WAITING;
-            }
-            this.io.to(this.name).emit(SOCKET_EVENTS.CLEAR);
-            this.syncGameState();
-        }
     }
 
     playCard(player, cardId) {
@@ -107,8 +84,8 @@ class Game {
                 if (cardPowers[effectKey] && typeof cardPowers[effectKey].applyEffect === 'function') {
                     cardPowers[effectKey].applyEffect(this, player, opponent);
                 }
-		});
-	}
+            });
+        }
         this.syncGameState();
     }
 
@@ -156,8 +133,7 @@ class Game {
         } else {
             this.syncGameState();
         }
-}
-
+    }
 
     nextTurn() {
         this.currentTurn = (this.currentTurn + 1) % this.players.length;
@@ -170,37 +146,35 @@ class Game {
 
         this.phase = PHASE_STATE.PLAY;
         this.syncGameState();
-    }      
+    }
 
     startGame() {
+        console.log('Starting game', this.gameId);
+        console.log('Players:', this.players.map(player => player.id));
         if (this.players.length >= 2) {
-            let allPlayersReady = true;
     
             for (let player of this.players) {
-                if (player.state !== PLAYER_STATE.READY) {
-                    allPlayersReady = false;
-                    break;
-                }
+                player.state = PLAYER_STATE.WAITING;
             }
-    
-            if (allPlayersReady) {
-                for (let player of this.players) {
-                    player.state = PLAYER_STATE.WAITING;
-                }
-            
-			this.currentTurn = 0;
-			this.players[this.currentTurn].state = PLAYER_STATE.PLAYING;
-			this.state = GAME_STATE.PLAYING;
-			this.phase = PHASE_STATE.DRAW;
-            this.syncGameState();
-            }
-        }
 
-        this.players[this.currentTurn].drawCard();
-        this.players[this.currentTurn].socket.emit(SOCKET_EVENTS.DRAW_CARD);
-        this.phase = PHASE_STATE.PLAY;
-        this.syncGameState();
+            this.currentTurn = 0;
+            this.players[this.currentTurn].state = PLAYER_STATE.PLAYING;
+            this.state = GAME_STATE.PLAYING;
+            this.phase = PHASE_STATE.DRAW;
+
+            this.players[this.currentTurn].drawCard();
+
+            if (this.players[this.currentTurn].socket) {
+                this.players[this.currentTurn].socket.emit(SOCKET_EVENTS.DRAW_CARD);
+            }
+
+            this.phase = PHASE_STATE.PLAY;
+
+        } else {
+            console.log('Not enough players');
+        }
     }
+    
 
     pauseGame() {
         if (this.state === GAME_STATE.PLAYING) {
@@ -220,18 +194,13 @@ class Game {
         this.io.to(this.name).emit(SOCKET_EVENTS.GAME_OVER);
         this.state = GAME_STATE.FINISHED;
 
-        setTimeout(()=>{
+        setTimeout(() => {
             for (const player of this.players) {
                 player.state = PLAYER_STATE.WAITING;
             }
-            this.syncGameState();
-        },3000); 
-    }
 
-    gameLoop() {
-        if (this.state === GAME_STATE.PLAYING) {  
             this.syncGameState();
-            }
+        }, 3000);
     }
 
     checkEndGame() {

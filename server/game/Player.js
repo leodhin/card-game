@@ -2,12 +2,10 @@ const { GAME_STATE } = require('../utils/constants');
 const Deck = require('../models/Deck.model');
 
 class Player {
-    constructor(socket) {
-        this.socket = socket;
+    constructor(userId) {
         this.hand = [];
         this.deck = {};
-        this.nickname = null;
-        this.id = socket.id;
+        this.id = userId;
         this.state = GAME_STATE.WAITING;
         this.gameId = {};
         this.health = 10;
@@ -18,7 +16,6 @@ class Player {
     getPlayerState() {
         return {
             id: this.id,
-            nickname: this.nickname,
             state: this.state,
             gameId: this.gameId,
             health: this.health,
@@ -44,7 +41,7 @@ class Player {
     }
 
 	async generateDeck() {
-        const userId = this.socket?.request?.user?.userId;
+        const userId = this.id;
         const deck = await Deck.findOne({userId}).populate('cards');
         if (!deck) {
             return null;

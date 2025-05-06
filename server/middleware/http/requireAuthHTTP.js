@@ -1,4 +1,3 @@
-// Middleware to check if user is authenticated
 const jwt = require('jsonwebtoken');
 
 function isLoggedIn(req, res, next) {

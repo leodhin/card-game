@@ -1,167 +1,69 @@
-const Game = require('./game/Game');
-const jwt = require('jsonwebtoken');
-
-const { GAME_STATE, PHASE_STATE, PLAYER_STATE, SOCKET_EVENTS } = require('./utils/constants');
-const { findGamePlayer, isEmpty } = require('./utils/utils');
+const GameController = require('./controllers/socket/game.controller');
+const { SOCKET_EVENTS } = require('./utils/constants');
 const { verifySocketAuth } = require('./middleware/socket/requireAuthSocket');
-const GameController = require('./controllers/socket/gamecontroller');
 const Matchmaker = require('./matchmaker');
 
 function createGameSocket(io) {
     const gameNamespace = io.of('/game');
-    const existing_games = {};
     const gameController = new GameController(gameNamespace);
     const matchmaker = new Matchmaker(gameController);
 
     gameNamespace.use(verifySocketAuth);
-    
-    gameNamespace.on('connection', (socket) => {
 
+    gameNamespace.on('connection', async (socket) => {
         const userId = socket?.request?.user?.userId;
-
-        if (userId) {
-            console.log('User connected with userId:', userId, 'and socket id:', socket.id);
-        } else {
-            socket.emit(SOCKET_EVENTS.UNAUTHORIZED, 'You must be logged in to play');
+        if (!userId) {
+            socket.emit(SOCKET_EVENTS.ERROR, 'User ID is missing.');
+            return;
         }
 
-        let gameState = [];
+        const { gameId, socket1, socket2 } = await matchmaker.queueSocket(socket);
 
-        socket.use((packet, next) => {
+        if (gameId) {
+            socket1.emit(SOCKET_EVENTS.GAME_START, gameId);
+            socket2.emit(SOCKET_EVENTS.GAME_START, gameId);
+            socket1.join(gameId);
+            socket2.join(gameId);
 
-            const eventName = packet[0];
-
-            // If is joining room
-            if (eventName === SOCKET_EVENTS.JOIN_ROOM) {
-                next();
+            const game = gameController.getGame(gameId);
+            gameController.startGame(gameId);
+            console.log("State of user", game.getSanitizedGameState(userId));
+            gameNamespace.to(gameId).emit(SOCKET_EVENTS.SYNC_GAME_STATE, game.getSanitizedGameState(userId));  
             }
-
-            // Does the player socket exist ?
-            var player = findGamePlayer(gameState.players, socket);
-            if (!isEmpty(player)) {
-                next();
-            }
-
-        })
-        
-        socket.on(SOCKET_EVENTS.JOIN_ROOM, async (room, nickname) => {
-            if (!existing_games[room]) {
-                console.log('Creating new game:', room);
-                existing_games[room] = new Game(gameNamespace, room);
-            }
-
-            if (existing_games[room].players?.length === 2) {
-                socket.emit(SOCKET_EVENTS.ERROR, "Game is full or already started");
-                socket.disconnect();
-                return;
-            }
-
-            socket.join(room);
-            await existing_games[room].addPlayer(socket, nickname);
-            gameState = existing_games[room];
-
-            gameNamespace.to(room).emit(SOCKET_EVENTS.PLAYER_CONNECTED, nickname || socket.id);
-
-            if (gameState.players.length === 2 && gameState.state === GAME_STATE.WAITING) {
-                gameState.players.forEach(player => {
-                    player.state = PLAYER_STATE.READY;
-                });
-                gameState.startGame();
-            }
-        })
-
-        socket.on('disconnect', () => {
-            socket.leaveAll(); // This ensure socket leaves all rooms
-            var playerRemoved = findGamePlayer(gameState.players, socket);
-
-            if (isEmpty(playerRemoved)) return;
-
-            gameState.removePlayer(socket);
-
-            gameNamespace.to(gameState.name).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, playerRemoved.nickname);
-
-            for (const gameId in existing_games) {
-                if (existing_games[gameId].players.length === 0) {
-                    delete existing_games[gameId];
-                }
-            }
-        })
-
-
-        // Ping pong
-        socket.on(SOCKET_EVENTS.PING, () => {
-            socket.emit(SOCKET_EVENTS.PONG);
-        });
-
-        socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
-            var player = findGamePlayer(gameState.players, socket);
-            gameNamespace.to(gameState.name).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, player.getPlayerState(), message);
-        });
-
-        socket.on(SOCKET_EVENTS.ATTACK, () => {
-            const attacker = gameState.players[gameState.currentTurn];
-            const defender = gameState.players.find(p => p.id !== attacker.id);
-            gameState.attack(attacker, defender);
-            gameState.nextTurn();
-        });
 
         socket.on(SOCKET_EVENTS.DRAW_CARD, () => {
-            const player = findGamePlayer(gameState.players, socket);
-            if (!player) {
-                socket.emit(SOCKET_EVENTS.ERROR, "Player not found");
-                return;
-            }
-
-            player.drawCard();
-            gameState.phase = PHASE_STATE.PLAY;
-            gameState.syncGameState();
+            gameController.playerDrawCard(gameId, userId);
         });
 
         socket.on(SOCKET_EVENTS.PLAY_CARD, (cardIndex) => {
-            const player = findGamePlayer(gameState.players, socket);
-            if (gameState.players[gameState.currentTurn].id !== player.id) {
-                socket.emit(SOCKET_EVENTS.ERROR, "It's not your turn!");
-                return;
-            }
-            gameState.playCard(player, cardIndex);
+            gameController.playerPlayCard(gameId, userId, cardIndex);
+        });
+
+        socket.on(SOCKET_EVENTS.ATTACK, () => {
+            gameController.playerAttack(gameId, userId);
         });
 
         socket.on(SOCKET_EVENTS.PASS, () => {
-            if (gameState.phase === 'play') {
-                gameState.phase = 'combat';
-                gameState.syncGameState();
-            } else if (gameState.phase === 'combat') {
-                gameState.nextTurn();
-            }
+            gameController.playerPassTurn(gameId, userId);
         });
 
+        socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
+            gameController.playerSendMessage(gameId, userId, message);
+        });
 
+        socket.on('disconnect', () => {
+            matchmaker.removePlayerFromQueue(socket?.request?.user?.userId);
+            if (!gameId) return;
+            gameNamespace.to(gameId).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, userId);
+        });
+
+        socket.on(SOCKET_EVENTS.PING, () => {
+            socket.emit(SOCKET_EVENTS.PONG);
+        });
     });
 
     return {
-        getGames() {
-            // Ensure existing_games is an object
-            if (typeof existing_games !== 'object' || existing_games === null) {
-                return [];
-            }
-
-            // Convert the object to an array of game instances
-            const gameArray = Object.values(existing_games);
-
-            // Map over the array to get the game info
-            const games = gameArray.map((game, index) => {
-                if (game && typeof game.getInfo === 'function') {
-                    const info = game.getInfo();
-                    console.log(`Game info for game at index ${index}:`, info);
-                    return info;
-                } else {
-                    console.error(`Game at index ${index} is not properly initialized or getInfo is not a function.`);
-                    return null;
-                }
-            });
-
-            return games;
-        }
+        getGames: () => gameController.getGames(),
     };
 }
 
