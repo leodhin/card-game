@@ -32,15 +32,16 @@ class GameController {
     game.syncGameState();
   }
 
-  playerPlayCard(gameId, userId, cardIndex) {
-    const game = this.existingGames[gameId];
+  playerPlayCard(userId, cardIndex) {
+    const game = Array.from(this.games.values()).find(game => game.getPlayer(userId));
     if (!game) return;
 
-    const player = game.getPlayer(userId);
-    if (!player) return;
-
-    game.playCard(player, cardIndex);
-    game.syncGameState();
+    try {
+      const player = game.getPlayer(userId);
+      game.playCard(player, cardIndex);
+    } catch (error) {
+      throw error;
+    }
   }
 
   playerAttack(gameId, userId) {
@@ -91,6 +92,44 @@ class GameController {
   getGame(gameId) {
     return this.games.get(gameId);
   }
+
+  getGameIdByUserId(userId) {
+    for (const [gameId, game] of this.games.entries()) {
+      if (game.players.some(player => player.id === userId)) {
+        return gameId;
+      }
+    }
+    return null;
+  }
+
+  getRoomIdByUserId(userId) {
+    for (const [gameId, game] of this.games.entries()) {
+      if (game.players.some(player => player.id === userId)) {
+        return gameId;
+      }
+    }
+    return null;
+  }
+
+  getMatchIdByUserId(userId) {
+    for (const [gameId, game] of this.games.entries()) {
+      if (game.players.some(player => player.id === userId)) {
+        return gameId;
+      }
+    }
+    return null;
+  }
+
+  getPlayerByUserId(userId) {
+    for (const game of this.games.values()) {
+      const player = game.getPlayer(userId);
+      if (player) {
+        return player;
+      }
+    }
+    return null;
+  }
+
 }
 
 module.exports = GameController;

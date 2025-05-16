@@ -7,16 +7,16 @@ class Matchmaker {
   constructor(io, gameController) {
     this.io = io;
     this.gameController = gameController;
-    this.waiting = new Map();          // userId → socket
+    this.waiting = new Map();
   }
 
   enqueue(socket) {
     const userId = socket.request?.user?.userId;
-    if (!userId) return socket.disconnect(true);      // Must be authenticated
+    if (!userId) return socket.disconnect(true);
 
     console.log("[QUEUE] Enqueueing user...", userId);
 
-    if (this.waiting.has(userId)) return; // Already in queue
+    if (this.waiting.has(userId)) return;
     this.waiting.set(userId, socket);
 
     socket.once('disconnect', () => this.remove(userId));
@@ -61,6 +61,10 @@ class Matchmaker {
       status: 'in-progress',
       createdAt: new Date(),
     }).catch(err => console.error('Error logging match history:', err));
+  }
+
+  getQueueIdByUserId(userId) {
+    return this.waiting.get(userId);
   }
 }
 

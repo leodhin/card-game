@@ -1,6 +1,7 @@
 const Player = require('./Player');
 const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../utils/constants');
 const cardPowers = require('./powers/cardPowers');
+const { CardError } = require('./Errors');
 
 class Game {
   constructor(gameId, userIds) {
@@ -59,19 +60,17 @@ class Game {
   playCard(player, cardId) {
     const cardIndex = player.hand.findIndex(c => c.id === cardId);
     if (cardIndex === -1) {
-      player.socket.emit(SOCKET_EVENTS.ERROR, "Card not found in hand");
-      return;
+      throw new CardError("Card not found in hand");
     }
     if (player.field.length > 0) {
-      player.socket.emit('error', "There is already a card in the field");
-      return;
+      throw new CardError("There is already a card in the field");
     }
 
     const card = player.hand[cardIndex];
     if (player.mana < card.cost) {
-      player.socket.emit(SOCKET_EVENTS.ERROR, "You don't have enough mana to play this card");
-      return;
+      throw new CardError("You don't have enough mana to play this card");
     }
+
     player.mana -= card.cost;
     player.field.push(card);
     player.hand.splice(cardIndex, 1);
@@ -80,7 +79,6 @@ class Game {
 
     // Apply dynamic power effects if any
     if (card.power) {
-      // If the power property is a string, convert it to an array for iteration
       const effects = Array.isArray(card.power) ? card.power : [card.power];
       const opponent = this.players.find(p => p.id !== player.id);
       effects.forEach(effectKey => {
@@ -89,7 +87,6 @@ class Game {
         }
       });
     }
-    this.syncGameState();
   }
 
   attack(attacker, defender) {
