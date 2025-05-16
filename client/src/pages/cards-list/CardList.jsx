@@ -45,13 +45,11 @@ function CardsListPage() {
   }
   return (
     <PageContainer isLoading={loading} error={error}>
-      <DndProvider backend={HTML5Backend}>
-        <div className="cards-list-matrix">
-          {cards.map((card) => (
-            <Card key={card.id} card={card} isActionable={true} onEdit={() => handleEditCard(card._id)} onDelete={() => handleDeleteCard(card._id)} />
-          ))}
-        </div>
-      </DndProvider>
+      <div className="cards-list-matrix">
+        {cards.map((card) => (
+          <Card key={card.id} card={card} isActionable={true} onEdit={() => handleEditCard(card._id)} onDelete={() => handleDeleteCard(card._id)} />
+        ))}
+      </div>
     </PageContainer>
   );
 }

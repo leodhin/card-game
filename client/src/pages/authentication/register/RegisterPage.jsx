@@ -18,7 +18,7 @@ function RegisterPage() {
     }
 
     try {
-      const response = await fetch("https://9pwbk5xx-3000.uks1.devtunnels.ms/api/auth/register", {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/register`, {
         method: "POST",
         body: JSON.stringify({ email, password, nickname }), // Include nickname in the request
         headers: {

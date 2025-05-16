@@ -3,68 +3,75 @@ const { SOCKET_EVENTS } = require('./utils/constants');
 const { verifySocketAuth } = require('./middleware/socket/requireAuthSocket');
 const Matchmaker = require('./matchmaker');
 
-function createGameSocket(io) {
-    const gameNamespace = io.of('/game');
-    const gameController = new GameController(gameNamespace);
-    const matchmaker = new Matchmaker(gameController);
+function gameSocketEvents(io) {
+  const gameNamespace = io.of('/game');
+  const gameController = new GameController(gameNamespace);
+  const matchmaker = new Matchmaker(io, gameController);
 
-    gameNamespace.use(verifySocketAuth);
+  // Authentication middleware for the game namespace
+  gameNamespace.use(verifySocketAuth);
 
-    gameNamespace.on('connection', async (socket) => {
-        const userId = socket?.request?.user?.userId;
-        if (!userId) {
-            socket.emit(SOCKET_EVENTS.ERROR, 'User ID is missing.');
-            return;
-        }
+  // Handle connection to the game namespace
+  gameNamespace.on('connection', async (socket) => {
+    const userId = socket?.request?.user?.userId;
+    if (!userId) {
+      socket.emit(SOCKET_EVENTS.ERROR, 'User ID is missing.');
+      return;
+    }
 
-        const { gameId, socket1, socket2 } = await matchmaker.queueSocket(socket);
+    socket.on('queue-1v1', () => matchmaker.enqueue(socket));
+    socket.on('cancel-queue', () => matchmaker.remove(socket.request.user.userId));
 
-        if (gameId) {
-            socket1.emit(SOCKET_EVENTS.GAME_START, gameId);
-            socket2.emit(SOCKET_EVENTS.GAME_START, gameId);
-            socket1.join(gameId);
-            socket2.join(gameId);
-
-            const game = gameController.getGame(gameId);
-            gameController.startGame(gameId);
-            console.log("State of user", game.getSanitizedGameState(userId));
-            gameNamespace.to(gameId).emit(SOCKET_EVENTS.SYNC_GAME_STATE, game.getSanitizedGameState(userId));  
-            }
-
-        socket.on(SOCKET_EVENTS.DRAW_CARD, () => {
-            gameController.playerDrawCard(gameId, userId);
-        });
-
-        socket.on(SOCKET_EVENTS.PLAY_CARD, (cardIndex) => {
-            gameController.playerPlayCard(gameId, userId, cardIndex);
-        });
-
-        socket.on(SOCKET_EVENTS.ATTACK, () => {
-            gameController.playerAttack(gameId, userId);
-        });
-
-        socket.on(SOCKET_EVENTS.PASS, () => {
-            gameController.playerPassTurn(gameId, userId);
-        });
-
-        socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
-            gameController.playerSendMessage(gameId, userId, message);
-        });
-
-        socket.on('disconnect', () => {
-            matchmaker.removePlayerFromQueue(socket?.request?.user?.userId);
-            if (!gameId) return;
-            gameNamespace.to(gameId).emit(SOCKET_EVENTS.PLAYER_DISCONNECTED, userId);
-        });
-
-        socket.on(SOCKET_EVENTS.PING, () => {
-            socket.emit(SOCKET_EVENTS.PONG);
-        });
+    socket.on(SOCKET_EVENTS.JOIN_ROOM, (gameId) => {
+      console.log("joining room", gameId);
+      // check if the user belongs to the game
+      const game = gameController.getGame(gameId);
+      if (!game) {
+        socket.emit(SOCKET_EVENTS.ERROR, 'Game not found.');
+        return;
+      }
+      const player = game.getPlayer(userId);
+      if (!player) {
+        socket.emit(SOCKET_EVENTS.ERROR, 'You are not a player in this game.');
+        return;
+      }
+      socket.join(gameId);
+      socket.emit(SOCKET_EVENTS.JOINED_ROOM, gameId);
+      socket.emit(SOCKET_EVENTS.SYNC_GAME_STATE, game.getSanitizedGameState(userId));
     });
 
-    return {
-        getGames: () => gameController.getGames(),
-    };
+    socket.on(SOCKET_EVENTS.DRAW_CARD, () => {
+      gameController.playerDrawCard(gameId, userId);
+    });
+
+    socket.on(SOCKET_EVENTS.PLAY_CARD, (cardIndex) => {
+      gameController.playerPlayCard(gameId, userId, cardIndex);
+    });
+
+    socket.on(SOCKET_EVENTS.ATTACK, () => {
+      gameController.playerAttack(gameId, userId);
+    });
+
+    socket.on(SOCKET_EVENTS.PASS, () => {
+      gameController.playerPassTurn(gameId, userId);
+    });
+
+    socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
+      gameController.playerSendMessage(gameId, userId, message);
+    });
+
+    socket.on('disconnect', () => {
+      matchmaker.remove(socket?.request?.user?.userId);
+    });
+
+    socket.on(SOCKET_EVENTS.PING, () => {
+      socket.emit(SOCKET_EVENTS.PONG);
+    });
+  });
+
+  return {
+    getGames: () => gameController.getGames(),
+  };
 }
 
-module.exports = createGameSocket;
+module.exports = gameSocketEvents;

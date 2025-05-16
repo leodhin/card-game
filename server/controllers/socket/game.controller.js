@@ -3,108 +3,94 @@ const Game = require('../../game/Game');
 const { SOCKET_EVENTS, PHASE_STATE } = require('../../utils/constants');
 
 class GameController {
-	constructor(gameNamespace) {
-		this.gameNamespace = gameNamespace;
-		this.existingGames = {};
-	}
+  constructor(gameNamespace) {
+    this.gameNamespace = gameNamespace;
+    this.games = new Map();
+  }
 
-	async createGame(userIds) {
-		if (userIds.length !== 2) {
-			throw new Error('Cannot create game: exactly 2 players required.');
-		}
+  async createGame(gameId, userIds) {
+    const game = await new Game(gameId, userIds);
+    this.games.set(gameId, game);
 
-		const gameId = uuidv4();
+    return gameId;
+  }
 
-		const game = new Game(gameId, (finishedGameId) => {
-			this.handleGameEnd(finishedGameId);
-		});
+  handleGameEnd(gameId) {
+    this.gameNamespace.in(gameId).disconnectSockets(true);
+    delete this.existingGames[gameId];
+  }
 
-		await Promise.all(userIds.map((userId) => game.addPlayer(userId)));
+  playerDrawCard(gameId, userId) {
+    const game = this.existingGames[gameId];
+    if (!game) return;
 
-		this.existingGames[gameId] = game;
-        console.log("Game created", game.gameId);
+    const player = game.getPlayer(userId);
+    if (!player) return;
 
-        this.gameNamespace.to(userIds).emit(SOCKET_EVENTS.SYNC_GAME_STATE, game.getSanitizedGameState(userIds[0]));
+    player.drawCard();
+    game.phase = PHASE_STATE.PLAY;
+    game.syncGameState();
+  }
 
-		return gameId;
-	}
+  playerPlayCard(gameId, userId, cardIndex) {
+    const game = this.existingGames[gameId];
+    if (!game) return;
 
-	handleGameEnd(gameId) {
-		this.gameNamespace.in(gameId).disconnectSockets(true);
-		delete this.existingGames[gameId];
-	}
+    const player = game.getPlayer(userId);
+    if (!player) return;
 
-	playerDrawCard(gameId, userId) {
-		const game = this.existingGames[gameId];
-		if (!game) return;
+    game.playCard(player, cardIndex);
+    game.syncGameState();
+  }
 
-		const player = game.getPlayer(userId);
-		if (!player) return;
+  playerAttack(gameId, userId) {
+    const game = this.existingGames[gameId];
+    if (!game) return;
 
-		player.drawCard();
-		game.phase = PHASE_STATE.PLAY;
-		game.syncGameState();
-	}
+    const attacker = game.getPlayer(userId);
+    const defender = game.players.find(p => p.id !== userId);
+    if (!attacker || !defender) return;
 
-	playerPlayCard(gameId, userId, cardIndex) {
-		const game = this.existingGames[gameId];
-		if (!game) return;
+    game.attack(attacker, defender);
+    game.nextTurn();
+    game.syncGameState();
+  }
 
-		const player = game.getPlayer(userId);
-		if (!player) return;
+  playerPassTurn(gameId, userId) {
+    const game = this.existingGames[gameId];
+    if (!game) return;
 
-		game.playCard(player, cardIndex);
-		game.syncGameState();
-	}
+    game.nextTurn();
+    game.syncGameState();
+  }
 
-	playerAttack(gameId, userId) {
-		const game = this.existingGames[gameId];
-		if (!game) return;
+  playerSendMessage(gameId, userId, message) {
+    const game = this.existingGames[gameId];
+    if (!game) return;
 
-		const attacker = game.getPlayer(userId);
-		const defender = game.players.find(p => p.id !== userId);
-		if (!attacker || !defender) return;
+    const player = game.getPlayer(userId);
+    if (!player) return;
 
-		game.attack(attacker, defender);
-		game.nextTurn();
-		game.syncGameState();
-	}
+  }
 
-	playerPassTurn(gameId, userId) {
-		const game = this.existingGames[gameId];
-		if (!game) return;
+  startGame(gameId) {
+    const game = this.existingGames[gameId];
+    if (!game) return;
 
-		game.nextTurn();
-		game.syncGameState();
-	}
+    game.startGame();
+  }
 
-	playerSendMessage(gameId, userId, message) {
-		const game = this.existingGames[gameId];
-		if (!game) return;
+  getGamesList() {
+    return Object.keys(this.existingGames);
+  }
 
-		const player = game.getPlayer(userId);
-		if (!player) return;
+  getGames() {
+    return this.games;
+  }
 
-	}
-
-    startGame(gameId) {
-        const game = this.existingGames[gameId];
-        if (!game) return;
-
-        game.startGame();
-    }
-
-	getGamesList() {
-		return Object.keys(this.existingGames);
-	}
-
-	getGames() {
-		return this.existingGames;
-	}
-
-	getGame(gameId) {
-		return this.existingGames[gameId];
-	}
+  getGame(gameId) {
+    return this.games.get(gameId);
+  }
 }
 
 module.exports = GameController;

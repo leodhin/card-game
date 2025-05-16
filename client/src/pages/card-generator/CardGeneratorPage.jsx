@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Card from "../../components/Card";
 
-import { createCard, getCardById, updateCard } from "../../services/card-service";
+import { createCard, getCardById, updateCard, generateAIImage } from "../../services/card-service";
 import PageContainer from "../../containers/PageContainer";
 
 import "./CardGenerator.css";
@@ -20,6 +20,9 @@ const CardGeneratorPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // New state for modal and input prompt
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
 
   useEffect(() => {
     if (cardId) {
@@ -62,6 +65,39 @@ const CardGeneratorPage = () => {
     }
   };
 
+  // Modified function: Now opens the modal instead of generating immediately
+  const handleGenerateImage = () => {
+    setIsModalOpen(true);
+  };
+
+  // New function: Confirm image generation using the prompt entered in modal
+  const handleConfirmGenerateImage = async () => {
+    if (!aiPrompt) {
+      alert("Please provide a prompt for image generation.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await generateAIImage(aiPrompt);
+      if (result?.image) {
+        const response = await fetch(result.image);
+        const imageBinary = await response.blob();
+        const reader = new FileReader();
+        reader.readAsDataURL(imageBinary);
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          setCardData(prevData => ({ ...prevData, img: base64data }));
+        };
+      }
+    } catch (err) {
+      alert("Failed to generate image. Please try again.");
+    } finally {
+      setLoading(false);
+      setIsModalOpen(false);
+      setAiPrompt("");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -95,7 +131,7 @@ const CardGeneratorPage = () => {
       <div className="card-generator-grid">
         {/* Left Side: Card Preview */}
         <div className="card-preview">
-          <Card card={cardData} />
+          <Card card={cardData} style={{ width: "100%", height: "100%" }} />
         </div>
 
         {/* Right Side: Input Form */}
@@ -117,7 +153,20 @@ const CardGeneratorPage = () => {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="image">Card Image:</label>
+              <label htmlFor="image">
+                Card Image:
+                <span
+                  className="ai-generate-icon"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleGenerateImage();
+                  }}
+                  style={{ cursor: "pointer", marginLeft: "8px" }}
+                >
+                  ⭐
+                </span>
+              </label>
               <input
                 type="file"
                 id="image"
@@ -174,6 +223,42 @@ const CardGeneratorPage = () => {
           </form>
         </div>
       </div>
+      {/* Modal for entering AI image prompt */}
+      {isModalOpen && (
+        <div className="modal-overlay" style={{
+          position: "fixed",
+          top: 0, left: 0,
+          width: "100%", height: "100%",
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
+          <div className="modal" style={{
+            background: "#fff",
+            padding: "20px",
+            borderRadius: "4px",
+            minWidth: "300px"
+          }}>
+            <h2>Enter Image Description</h2>
+            <input
+              type="text"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Describe the image..."
+              style={{ width: "100%", marginBottom: "10px" }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setIsModalOpen(false)} style={{ marginRight: "10px" }}>
+                Cancel
+              </button>
+              <button onClick={handleConfirmGenerateImage}>
+                Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageContainer>
   );
 };

@@ -1,46 +1,56 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MoreVert } from '@mui/icons-material';
-import { isEmpty } from 'lodash';
 
 import BackCardPNG from '../../assets/back-card.png';
 import './Card.css';
 
 function Card({ card, isFaceUp = true, onClick, style, onEdit, onDelete }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isTransformed] = useState(false);
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = (e) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width - 0.5) * 40;
-    const y = ((e.clientY - top) / height - 0.5) * -10;
-    setRotate({ x, y });
+    if (e.altKey) {
+
+      const dx = e.clientX - (left + width / 2);
+      const dy = e.clientY - (top + height / 2);
+      const maxAngle = 50;
+
+      const rotateY = -(dx / (width / 2)) * maxAngle;
+      const rotateX = -(dy / (height / 2)) * maxAngle;
+      setRotate({ x: rotateY, y: rotateX });
+      setIsHovered(true);
+    } else {
+      setRotate({ x: 0, y: 0 });
+      setIsHovered(false);
+    }
   };
 
   const handleMouseLeave = () => {
     setRotate({ x: 0, y: 0 });
+    setIsHovered(false);
   };
 
   const toggleMenu = (e) => {
-    e.stopPropagation(); // Prevent triggering card click
+    e.stopPropagation();
   };
 
   return (
     <motion.div
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      animate={isTransformed && { rotateX: rotate.y, rotateY: rotate.x }}
-      transition={{ type: 'spring', stiffness: 200, damping: 100 }}
-      style={{ perspective: 1000 }}
+      animate={{ rotateX: rotate.y, rotateY: rotate.x }}
+      transition={{ type: 'spring', stiffness: 40, damping: 50 }}
+      style={{ perspective: 1000, width: '100%', height: '100%' }}
     >
       <div
         onClick={onClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={(e) => setIsHovered(e.altKey)}
+        onMouseLeave={handleMouseLeave}
         className="card"
         style={{
-          transform: isTransformed ? 'scale(2.5)' : 'scale(1)',
+          transform: isHovered ? 'scale(1.5)' : 'scale(1)',
           transformOrigin: 'bottom center',
           backgroundImage: isFaceUp
             ? `url(${card?.img})`

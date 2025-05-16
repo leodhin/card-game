@@ -20,3 +20,7 @@ export const updateCard = async (cardId, cardData) => {
 export const deleteCard = (cardId) => {
   return del(`card/${cardId}`)
 }
+
+export const generateAIImage = async (prompt) => {
+  return await post('generate-cardimage', { prompt });
+};

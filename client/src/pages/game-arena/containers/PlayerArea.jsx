@@ -1,12 +1,18 @@
-import React from "react";
 import { DraggableCard } from "../../../components/Card";
 
-function PlayerArea({ playerHand, playerHealth, playerEnergy }) {
+function PlayerArea({ playerHand, playerHealth, playerEnergy, isActive }) {
   return (
     <div className="player-area">
-      <div className="player-hp-mana">
-        <div className="player-hp">HP: {playerHealth}</div>&nbsp;
-        <div className="player-mana">Mana: {playerEnergy}</div>
+      {isActive && <div className="turn-indicator">Your Turn</div>}
+      <div className="status-indicators">
+        <div className="status-indicator mana-indicator">
+          <span className="icon">✨</span>
+          <span className="status-value">{playerEnergy}</span>
+        </div>
+        <div className="status-indicator life-indicator">
+          <span className="icon">❤️</span>
+          <span className="status-value">{playerHealth}</span>
+        </div>
       </div>
       <div className="player-cards">
         {playerHand.map((card, index) => (

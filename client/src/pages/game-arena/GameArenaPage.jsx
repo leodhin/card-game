@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "react-router-dom";
@@ -10,16 +10,13 @@ import MiddleArea from "./containers/MiddleArea";
 import ActionButtons from "./containers/ActionButtons";
 import CustomDragLayer from "./components/CustomDragLayer";
 import Card from "../../components/Card";
-
 import "./GameArenaPage.css";
-import { m } from "framer-motion";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 function GameArenaPage() {
   const location = useLocation();
   const gameId = location.pathname.split("/").pop();
-  const nickname = localStorage.getItem("nickname");
 
   const [opponentHand, setOpponentHand] = useState([]);
   const [playerHand, setPlayerHand] = useState([]);
@@ -34,39 +31,35 @@ function GameArenaPage() {
   const [playerStack, setPlayerStack] = useState([]);
   const [opponentStack, setOpponentStack] = useState([]);
 
-  const onGameStateUpdate = (data, socketId) => {
-    const myPlayer = data.players.find((p) => p.id === socketId);
-    const enemyPlayer = data.players.find((p) => p.id !== socketId);
+  const { emitEvent, socket, connecting, hasjoined, error: connectionError, data, userId } =
+    useSocket(SERVER_URL, gameId);
 
-    setPlayerStack(myPlayer.deck);
-    setOpponentStack(enemyPlayer.deck);
+  useEffect(() => {
+    if (data) {
+      const myPlayer = data.players.find((p) => p.id === userId);
+      const enemyPlayer = data.players.find((p) => p.id !== userId);
 
-    if (myPlayer) {
-      setPlayerHealth(myPlayer.health);
-      setPlayerEnergy(myPlayer.energy);
-      setPlayerHand(myPlayer.hand);
-      setPlayerActiveCards(myPlayer.field);
+      setPlayerStack(myPlayer.deck);
+      setOpponentStack(enemyPlayer.deck);
 
-      const opponent = data.players.find((p) => p.id !== socketId);
-      if (opponent) {
-        setOpponentHand(opponent.hand);
-        setOpponentHealth(opponent.health);
-        setOpponentEnergy(opponent.energy);
-        setOpponentActiveCards(opponent.field);
+      if (myPlayer) {
+        setPlayerHealth(myPlayer.health);
+        setPlayerEnergy(myPlayer.energy);
+        setPlayerHand(myPlayer.hand);
+        setPlayerActiveCards(myPlayer.field);
+      }
+      if (enemyPlayer) {
+        setOpponentHand(enemyPlayer.hand);
+        setOpponentHealth(enemyPlayer.health);
+        setOpponentEnergy(enemyPlayer.energy);
+        setOpponentActiveCards(enemyPlayer.field);
       }
 
       const activePlayer = data.players[data.currentTurn];
       setGamePhase(data.phase);
-
-      if (activePlayer && activePlayer.id === socketId && data.state === "playing") {
-        setIsMyTurn(true);
-      } else {
-        setIsMyTurn(false);
-      }
+      setIsMyTurn(activePlayer && activePlayer.id === userId && data.state === "playing");
     }
-  };
-
-  const { emitEvent, socket, connecting, error: connectionError } = useSocket(SERVER_URL, gameId, nickname, onGameStateUpdate);
+  }, [data, userId]);
 
   const handleDropOnPlayer = (item) => {
     emitEvent("playCard", item?.id);
@@ -79,7 +72,7 @@ function GameArenaPage() {
         className="stack-card"
         style={{
           position: "absolute",
-          top: `${index * 2}px`, // Offset each card slightly
+          top: `${index * 2}px`,
           left: `${index * 2}px`,
           zIndex: index,
         }}
@@ -88,50 +81,47 @@ function GameArenaPage() {
       </div>
     ));
   };
+
+  console.log("connectionError", connectionError);
   return (
-    <PageContainer
-      isLoading={connecting}
-      loadingMessage="Finding players..."
-      error={connectionError}
-    >
+    <PageContainer isLoading={!connecting && !hasjoined} loadingMessage="Loading game..." error={connectionError}>
       <DndProvider backend={HTML5Backend}>
         <CustomDragLayer />
+
+        {/* Left side profiles */}
+        <div className="left-profiles">
+          <div className="profile opponent-profile">
+            <img className="profile-pic" src="https://picsum.photos/200/300" alt="Opponent" />
+            <span className="profile-name">Enemy nickname</span>
+          </div>
+          <div className="profile player-profile">
+            <img className="profile-pic" src="https://picsum.photos/200/300" alt="Player" />
+            <span className="profile-name">Player nickname</span>
+          </div>
+        </div>
+
         <div className="game-board">
-          {/* Opponent Area */}
           <OpponentArea
             cards={opponentHand}
             opponentHealth={opponentHealth}
             opponentEnergy={opponentEnergy}
-            isActive={!isMyTurn} // Highlight opponent area if it's their turn
+            isActive={!isMyTurn}
           />
-
-          {/* Middle Area */}
-          <MiddleArea
-            opponentActiveCards={opponentActiveCards}
-            playerActiveCards={playerActiveCards}
-            handleDropOnPlayer={handleDropOnPlayer}
-          />
-
-          {/* Player Area */}
+          <MiddleArea opponentActiveCards={opponentActiveCards} playerActiveCards={playerActiveCards} handleDropOnPlayer={handleDropOnPlayer} />
           <PlayerArea
             playerHand={playerHand}
             playerHealth={playerHealth}
             playerEnergy={playerEnergy}
-            isActive={isMyTurn} // Highlight player area if it's their turn
+            isActive={isMyTurn}
           />
         </div>
 
-        {/* Action Buttons */}
-        {isMyTurn && (
-          <ActionButtons emitEvent={emitEvent} socket={socket} />
-        )}
+        {isMyTurn && <ActionButtons emitEvent={emitEvent} socket={socket} />}
 
-        {/* Opponent Stack */}
         <div className="opponent-stack">
           <div className="stack-container">{renderStack(opponentStack)}</div>
         </div>
 
-        {/* Player Stack */}
         <div className="player-stack">
           <div className="stack-container">{renderStack(playerStack)}</div>
         </div>

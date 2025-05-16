@@ -4,7 +4,6 @@ import { styled } from '@mui/material/styles';
 import MuiAppBar from '@mui/material/AppBar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -131,6 +130,18 @@ const HeaderElementLayout = (props) => {
 
           {/* Navigation Links */}
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+            <Link
+              to="/"
+              style={{
+                textDecoration: 'none',
+                color: 'inherit',
+                marginRight: '20px',
+              }}
+            >
+              <Typography variant="button" color="inherit">
+                Home
+              </Typography>
+            </Link>
             <Link to="/deck-generator" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
               <Typography variant="button" color="inherit">
                 Deck Generator

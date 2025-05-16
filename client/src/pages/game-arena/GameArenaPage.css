@@ -17,6 +17,52 @@
   padding: 10px;
   border: 2px solid #ccc;
   border-radius: 10px;
+  position: relative;
+  padding-top: 140px;
+  /* Space for the status circles */
+}
+
+/* Container for the status indicators */
+.opponent-area .status-indicators {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+/* Common styling for both indicators */
+.status-indicator {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #fff;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Left side indicator for Mana */
+.mana-indicator {
+  background: radial-gradient(circle, #3498db 0%, #2980b9 100%);
+}
+
+/* Right side indicator for Life */
+.life-indicator {
+  background: radial-gradient(circle, #ff416c 0%, #ff4b2b 100%);
+}
+
+/* Optional icon styling */
+.status-indicator .icon {
+  margin-bottom: 5px;
+  font-size: 1.8rem;
 }
 
 /* Middle area (Active Cards) */
@@ -69,6 +115,52 @@
   padding: 10px;
   border: 2px solid #ccc;
   border-radius: 10px;
+  position: relative;
+  padding-top: 140px;
+  /* Space for the status circles */
+}
+
+/* Container for the two status indicators, positioned absolutely */
+.status-indicators {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+/* Common styling for both indicators */
+.status-indicator {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #fff;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Left side indicator for Mana */
+.mana-indicator {
+  background: radial-gradient(circle, #3498db 0%, #2980b9 100%);
+}
+
+/* Right side indicator for Life */
+.life-indicator {
+  background: radial-gradient(circle, #ff416c 0%, #ff4b2b 100%);
+}
+
+/* Optional icon styling */
+.status-indicator .icon {
+  margin-bottom: 5px;
+  font-size: 1.8rem;
 }
 
 /* Player and opponent HP/Mana */
@@ -191,4 +283,54 @@
 
 .pass-button:hover {
   background-color: darkgrey;
+}
+
+.turn-indicator {
+  position: absolute;
+  top: -40px;
+  /* Adjust as needed */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* Left side absolute profiles container */
+.left-profiles {
+  position: absolute;
+  left: 10px;
+  top: 100px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 1000;
+}
+
+/* Common profile styling */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-name {
+  color: #fff;
+  font-weight: bold;
+  font-size: 1rem;
 }
