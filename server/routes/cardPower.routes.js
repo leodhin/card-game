@@ -4,6 +4,7 @@ const {isLoggedIn} = require('../middleware/http/requireAuthHTTP');
 
 const router = express.Router();
 
+//TODO: create controller
 // GET all card powers
 router.get('/card-power-list', isLoggedIn, async (req, res) => {
 	try {
@@ -29,7 +30,7 @@ router.post('/card-power', isLoggedIn, async (req, res) => {
 });
 
 // PUT update a card power by ID
-router.put('/card-power/:id', isLoggedIn, async (req, res) => {
+router.put('/:id', isLoggedIn, async (req, res) => {
 	try {
 		const { id } = req.params;
 		const { name, description, effectKey } = req.body;
@@ -49,7 +50,7 @@ router.put('/card-power/:id', isLoggedIn, async (req, res) => {
 });
 
 // DELETE remove a card power by ID
-router.delete('/card-power/:id', isLoggedIn, async (req, res) => {
+router.delete('/:id', isLoggedIn, async (req, res) => {
 	try {
 		const { id } = req.params;
 		const deletedPower = await CardPower.findByIdAndDelete(id);

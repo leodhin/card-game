@@ -1,7 +1,7 @@
 import { get, post, put, del } from './network';
 
 export const getCardList = (loginBody) => {
-  return get('card-list', loginBody)
+  return get('card/card-list', loginBody)
 };
 
 export const createCard = (cardData) => {

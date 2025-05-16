@@ -18,6 +18,11 @@ export const useMatchmakingSocket = () => {
       socketRef.current = socket;
 
       socket.on("connect", () => setError(null));
+      // TODO: Handle reconnection logic if needed
+      socket.on("disconnect", () => {
+        setError("Disconnected from server. Please try again.");
+        setStatus("idle");
+      });
       socket.on("match-found", payload => {
         setMatch(payload);
         setStatus("matched");
@@ -26,6 +31,7 @@ export const useMatchmakingSocket = () => {
         setError("An error occurred while connecting to the server.");
         console.error("Socket error:", error);
       });
+      
 
       socketRef.current?.emit("queue-1v1");
 

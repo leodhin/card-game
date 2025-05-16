@@ -1,10 +1,12 @@
 const MatchHistoryModel = require('../models/Game.model');
 
+
 exports.logMatchHistory = async (matchRecord) => {
   try {
     const newRecord = new MatchHistoryModel(matchRecord);
-    await newRecord.save();
-    console.log('Match record logged:', newRecord);
+    const result = await newRecord.save();
+
+    console.info(`[MATCHMAKER] Matched ${result.players[0].username} with ${result.players[1].username}`);
     return newRecord;
   } catch (error) {
     console.error('Error logging match history:', error);

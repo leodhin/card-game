@@ -4,7 +4,8 @@ const Deck = require('../models/Deck.model');
 const { updateDeck } = require('../controllers/http/deck.controller');
 const router = express.Router();
 
-router.post('/deck', isLoggedIn, async (req, res) => {
+//TODO: create controller
+router.post('/', isLoggedIn, async (req, res) => {
 	try {
 		const userId = req.userId;
 		if (!userId)
@@ -60,7 +61,7 @@ router.get('/deck-list', isLoggedIn, async (req, res) => {
 	}
 });
 
-router.get('/deck/:deckId', isLoggedIn, async (req, res) => {
+router.get('/:deckId', isLoggedIn, async (req, res) => {
 	try {
 		const { deckId } = req.params;
 		const deck = await Deck.findById(deckId).populate('cards');
@@ -74,10 +75,10 @@ router.get('/deck/:deckId', isLoggedIn, async (req, res) => {
 	}
 });
 
-router.put('/deck/:deckId', isLoggedIn, updateDeck);
+router.put('/:deckId', isLoggedIn, updateDeck);
 
 
-router.delete('/deck/:deckId', isLoggedIn, async (req, res) => {
+router.delete('/:deckId', isLoggedIn, async (req, res) => {
 	try {
 		const { deckId } = req.params;
 		const deck = await Deck.findByIdAndDelete(deckId);

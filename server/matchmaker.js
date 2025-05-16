@@ -1,4 +1,3 @@
-// Matchmaker.js
 const { v4: uuidv4 } = require('uuid');
 
 const { logMatchHistory } = require('./services/game.service');
@@ -41,26 +40,35 @@ class Matchmaker {
     this.waiting.delete(id2);
 
     const roomId = uuidv4();
-    const gameId = await this.gameController.createGame(roomId, [id1, id2]);
+    try {
+      const gameId = await this.gameController.createGame(roomId, [id1, id2]);
 
-    sock1.join(roomId);
-    sock2.join(roomId);
+      sock1.join(roomId);
+      sock2.join(roomId);
 
-    const payload = { gameId, roomId, players: [id1, id2] };
+      const payload = { gameId, roomId, players: [id1, id2] };
 
-    // Notify both players that they have been matched
-    sock1.emit('match-found', payload);
-    sock2.emit('match-found', payload);
+      // Notify both players that they have been matched
+      sock1.emit('match-found', payload);
+      sock2.emit('match-found', payload);
 
-    console.info(`[MATCHMAKER] Matched ${id1} vs ${id2} → room ${roomId}, game ${gameId}`);
+      logMatchHistory({
+        gameId,
+        players: [id1, id2],
+        roomId,
+        status: 'in-progress',
+        createdAt: new Date(),
+      }).catch(err => console.error('Error logging match history:', err));
+    } catch (error) {
+      console.error('Error creating game:', error);
+      sock1.emit('match-error', 'Error creating game');
+      sock2.emit('match-error', 'Error creating game');
+      sock1.disconnect();
+      sock2.disconnect();
+      return;
+    }
 
-    logMatchHistory({
-      gameId,
-      players: [id1, id2],
-      roomId,
-      status: 'in-progress',
-      createdAt: new Date(),
-    }).catch(err => console.error('Error logging match history:', err));
+
   }
 
   getQueueIdByUserId(userId) {

@@ -4,7 +4,7 @@ module.exports.updateDeck = async (req, res) => {
     try {
         const { deckId } = req.params;
         const { name, cards, createdBy } = req.body;
-        const deck = await DeckModel.findByIdAndUpdate(deckId, { name, cards, createdBy }, { new: true });
+        const deck = await DeckModel.findByIdAndUpdate(deckId, { name, cards, createdBy }, { new: true }); //TODO: implement in services
         if (!deck) {
             return res.status(404).json({ error: 'Deck not found' });
         }

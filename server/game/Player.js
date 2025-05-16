@@ -11,8 +11,6 @@ class Player {
     this.health = 10;
     this.mana = 1;
     this.field = [];
-
-    this.init();
   }
 
   getPlayerState() {

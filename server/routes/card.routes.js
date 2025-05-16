@@ -6,8 +6,8 @@ const { saveImage, removeImage } = require('../utils/utils');
 
 const router = express.Router();
 
-
-router.post('/card', isLoggedIn, async (req, res) => {
+//TODO: create controller
+router.post('/', isLoggedIn, async (req, res) => {
   try {
     const { name, img, attack, defense, lore } = req.body;
     let filename = null;
@@ -63,7 +63,7 @@ router.get('/card-list', isLoggedIn, async (req, res) => {
   }
 });
 
-router.get('/card/:cardId', isLoggedIn, async (req, res) => {
+router.get('/cardId', isLoggedIn, async (req, res) => {
   try {
     const { cardId } = req.params;
     const card = await CardModel.findById(cardId);
@@ -80,7 +80,7 @@ router.get('/card/:cardId', isLoggedIn, async (req, res) => {
   }
 });
 
-router.delete('/card/:cardId', isLoggedIn, async (req, res) => {
+router.delete('/:cardId', isLoggedIn, async (req, res) => {
   try {
     const cardId = req.params.id;
     const userId = req.userId;
@@ -100,7 +100,7 @@ router.delete('/card/:cardId', isLoggedIn, async (req, res) => {
   }
 });
 
-router.put('/card/:cardId', isLoggedIn, async (req, res) => {
+router.put('/:cardId', isLoggedIn, async (req, res) => {
   try {
     const { cardId } = req.params;
     const { name, img, attack, defense, lore } = req.body;

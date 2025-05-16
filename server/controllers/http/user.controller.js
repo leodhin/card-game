@@ -4,7 +4,7 @@ const { logMatchHistory, getMatchHistory } = require('../../services/game.servic
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.userId;
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('-password'); //TODO: implement in services
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }

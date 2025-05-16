@@ -4,24 +4,23 @@ const cardPowers = require('./powers/cardPowers');
 const { CardError } = require('./Errors');
 
 class Game {
-  constructor(gameId, userIds) {
+  constructor(gameId) {
     this.gameId = gameId;
     this.players = [];
     this.state = GAME_STATE.WAITING;
     this.currentTurn = 0;
     this.phase = PHASE_STATE.WAIT;
 
-    this.init(userIds);
   }
 
   async init(userIds) {
-    await Promise.all(userIds.map((userId) => this.addPlayer(userId)));
+      await Promise.all(userIds.map((userId) => this.addPlayer(userId)));
   }
 
-  getSanitizedGameState(requestingPlayerId) {
+  getPlayerGameState(requestingPlayerId) {
     return {
       players: this.players.map(player => {
-        const state = player.getPlayerState();
+        const state = player.getPlayerState(); 
 
         // Sanitize hand
         if (player.id !== requestingPlayerId) {
@@ -38,25 +37,20 @@ class Game {
     };
   }
 
-  syncGameState() {
-    this.players.forEach(player => {
-      player.socket.emit(
-        SOCKET_EVENTS.SYNC_GAME_STATE,
-        this.getSanitizedGameState(player.id)
-      );
-    });
-  }
-
   async addPlayer(userId) {
     const newPlayer = await new Player(userId);
+    await newPlayer.init();
 
     this.players.push(newPlayer);
+  
   }
 
   getPlayer(userId) {
     return this.players.find(player => player.id === userId);
   }
 
+
+  //TODO: construir el control de errores en el resto de funciones
   playCard(player, cardId) {
     const cardIndex = player.hand.findIndex(c => c.id === cardId);
     if (cardIndex === -1) {
@@ -91,15 +85,14 @@ class Game {
 
   attack(attacker, defender) {
     if (!attacker.field.length > 0) {
-      attacker.socket.emit(SOCKET_EVENTS.ERROR, "You cannot attack without a card in the field");
-      return;
+      throw new CardError("You don't have any cards in the field to attack with");
     }
 
     const atkCard = attacker.field[0];
 
     if (!defender.field.length > 0) {
       defender.health -= atkCard.attack;
-      this.syncGameState();
+
       return;
     }
 
@@ -131,7 +124,7 @@ class Game {
     if (defender.health <= 0 || attacker.health <= 0) {
       this.endGame();
     } else {
-      this.syncGameState();
+
     }
   }
 
@@ -142,10 +135,9 @@ class Game {
     this.phase = PHASE_STATE.DRAW;
     currentPlayer.regenerateMana();
     currentPlayer.drawCard();
-    this.syncGameState();
 
     this.phase = PHASE_STATE.PLAY;
-    this.syncGameState();
+
   }
 
   startGame() {
@@ -153,6 +145,7 @@ class Game {
     console.log('Players:', this.players.map(player => player.id));
     if (this.players.length >= 2) {
 
+      // TODO: esta logica va en elcontroller
       for (let player of this.players) {
         player.state = PLAYER_STATE.WAITING;
       }
@@ -179,19 +172,16 @@ class Game {
   pauseGame() {
     if (this.state === GAME_STATE.PLAYING) {
       this.state = GAME_STATE.PAUSED;
-      this.syncGameState();
     }
   }
 
   resumeGame() {
     if (this.state === GAME_STATE.PAUSED) {
       this.state = GAME_STATE.PLAYING;
-      this.syncGameState();
     }
   }
 
   endGame() {
-    this.io.to(this.name).emit(SOCKET_EVENTS.GAME_OVER);
     this.state = GAME_STATE.FINISHED;
 
     setTimeout(() => {
@@ -199,7 +189,7 @@ class Game {
         player.state = PLAYER_STATE.WAITING;
       }
 
-      this.syncGameState();
+
     }, 3000);
   }
 
