@@ -17,7 +17,7 @@ function DroppableArea({ title, onDrop, style }) {
       ref={drop}
       className="active-cards"
       style={{
-        backgroundColor: isOver ? '#d4edda' : '#f8d7da',
+        backgroundColor: isOver ? '#d4edda' : null,
         ...style,
       }}
     >

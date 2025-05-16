@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
-export const useMatchmakingSocket = (serverUrl) => {
+export const useMatchmakingSocket = () => {
   const socketRef = useRef();
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
@@ -22,7 +22,10 @@ export const useMatchmakingSocket = (serverUrl) => {
         setMatch(payload);
         setStatus("matched");
       });
-      socket.on("connect_error", () => setError("Cannot reach server"));
+      socket.on("error", (error) => {
+        setError("An error occurred while connecting to the server.");
+        console.error("Socket error:", error);
+      });
 
       socketRef.current?.emit("queue-1v1");
 

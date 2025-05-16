@@ -1,74 +1,12 @@
-.game-board {
-  display: grid;
-  grid-template-rows: 2fr 2fr 2fr;
-  height: 100%;
-  width: 100%;
-  gap: 10px;
-  box-sizing: border-box;
-}
+.game-board {}
 
-/* Opponent area */
-.opponent-area {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: #f8d7da;
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  position: relative;
-  padding-top: 140px;
-  /* Space for the status circles */
-}
 
-/* Container for the status indicators */
-.opponent-area .status-indicators {
-  position: absolute;
-  top: 20px;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-/* Common styling for both indicators */
-.status-indicator {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.5rem;
-  color: #fff;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Left side indicator for Mana */
-.mana-indicator {
-  background: radial-gradient(circle, #3498db 0%, #2980b9 100%);
-}
-
-/* Right side indicator for Life */
-.life-indicator {
-  background: radial-gradient(circle, #ff416c 0%, #ff4b2b 100%);
-}
-
-/* Optional icon styling */
-.status-indicator .icon {
-  margin-bottom: 5px;
-  font-size: 1.8rem;
-}
 
 /* Middle area (Active Cards) */
 .middle-area {
   display: flex;
   flex-direction: column;
+  background-color: #727272a6;
 }
 
 /* Opponent Active Cards */
@@ -79,12 +17,9 @@
   /* Display cards in a column */
   justify-content: center;
   align-items: center;
-  background-color: #f8d7da;
-  border: 2px dashed #ccc;
   padding: 10px;
   margin: 0 10px;
   min-height: 150px;
-  border-radius: 10px;
   transition: background-color 0.3s ease;
 }
 
@@ -96,13 +31,21 @@
   /* Display cards in a column */
   justify-content: center;
   align-items: center;
-  background-color: #d4edda;
-  border: 2px dashed #ccc;
   padding: 10px;
   margin: 0 10px;
   min-height: 150px;
   border-radius: 10px;
   transition: background-color 0.3s ease;
+}
+
+
+/* Opponent area */
+.opponent-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
 }
 
 /* Player area */
@@ -111,67 +54,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #d4edda;
   padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  position: relative;
-  padding-top: 140px;
-  /* Space for the status circles */
-}
-
-/* Container for the two status indicators, positioned absolutely */
-.status-indicators {
-  position: absolute;
-  top: 20px;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-/* Common styling for both indicators */
-.status-indicator {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.5rem;
-  color: #fff;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Left side indicator for Mana */
-.mana-indicator {
-  background: radial-gradient(circle, #3498db 0%, #2980b9 100%);
-}
-
-/* Right side indicator for Life */
-.life-indicator {
-  background: radial-gradient(circle, #ff416c 0%, #ff4b2b 100%);
-}
-
-/* Optional icon styling */
-.status-indicator .icon {
-  margin-bottom: 5px;
-  font-size: 1.8rem;
-}
-
-/* Player and opponent HP/Mana */
-.player-hp-mana,
-.opponent-hp-mana {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 10px;
 }
 
 /* Player and opponent cards */
@@ -180,9 +63,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  width: 100%;
+  gap: 30px;
 }
 
 /* Stack container */

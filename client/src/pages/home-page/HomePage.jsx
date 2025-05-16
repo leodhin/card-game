@@ -9,8 +9,7 @@ import "./HomePage.css";
 function HomePage() {
   const navigate = useNavigate();
 
-  const { queue, cancel, status, match } =
-    useMatchmakingSocket(import.meta.env.VITE_API_URL);
+  const { queue, cancel, status, match } = useMatchmakingSocket();
 
   /* Jump to the play page as soon as we’re matched */
   useEffect(() => {

@@ -82,7 +82,6 @@ function GameArenaPage() {
     ));
   };
 
-  console.log("connectionError", connectionError);
   return (
     <PageContainer isLoading={!connecting && !hasjoined} loadingMessage="Loading game..." error={connectionError}>
       <DndProvider backend={HTML5Backend}>
@@ -92,11 +91,23 @@ function GameArenaPage() {
         <div className="left-profiles">
           <div className="profile opponent-profile">
             <img className="profile-pic" src="https://picsum.photos/200/300" alt="Opponent" />
-            <span className="profile-name">Enemy nickname</span>
+            <div className="profile-info">
+              <span className="profile-name">Enemy nickname</span>
+              <div className="profile-stats">
+                <span className="profile-hp">❤️ {opponentHealth}</span>
+                <span className="profile-mana">💧 {opponentEnergy}</span>
+              </div>
+            </div>
           </div>
           <div className="profile player-profile">
             <img className="profile-pic" src="https://picsum.photos/200/300" alt="Player" />
-            <span className="profile-name">Player nickname</span>
+            <div className="profile-info">
+              <span className="profile-name">Player nickname</span>
+              <div className="profile-stats">
+                <span className="profile-hp">❤️ {playerHealth}</span>
+                <span className="profile-mana">💧 {playerEnergy}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -105,14 +116,16 @@ function GameArenaPage() {
             cards={opponentHand}
             opponentHealth={opponentHealth}
             opponentEnergy={opponentEnergy}
-            isActive={!isMyTurn}
           />
-          <MiddleArea opponentActiveCards={opponentActiveCards} playerActiveCards={playerActiveCards} handleDropOnPlayer={handleDropOnPlayer} />
+          <MiddleArea
+            opponentActiveCards={opponentActiveCards}
+            playerActiveCards={playerActiveCards}
+            handleDropOnPlayer={handleDropOnPlayer}
+          />
           <PlayerArea
             playerHand={playerHand}
             playerHealth={playerHealth}
             playerEnergy={playerEnergy}
-            isActive={isMyTurn}
           />
         </div>
 

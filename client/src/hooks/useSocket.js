@@ -76,7 +76,6 @@ const useSocket = (serverUrl, gameId, nickname) => {
         setError("You are not a player in this game. Please check your game ID.");
       } else {
         console.error("Error:", errorMsg);
-        setError("An error occurred. Please try again.");
       }
       setConnecting(false);
     });

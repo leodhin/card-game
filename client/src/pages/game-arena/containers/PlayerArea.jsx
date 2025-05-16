@@ -1,19 +1,8 @@
 import { DraggableCard } from "../../../components/Card";
 
-function PlayerArea({ playerHand, playerHealth, playerEnergy, isActive }) {
+function PlayerArea({ playerHand }) {
   return (
     <div className="player-area">
-      {isActive && <div className="turn-indicator">Your Turn</div>}
-      <div className="status-indicators">
-        <div className="status-indicator mana-indicator">
-          <span className="icon">✨</span>
-          <span className="status-value">{playerEnergy}</span>
-        </div>
-        <div className="status-indicator life-indicator">
-          <span className="icon">❤️</span>
-          <span className="status-value">{playerHealth}</span>
-        </div>
-      </div>
       <div className="player-cards">
         {playerHand.map((card, index) => (
           <DraggableCard
