@@ -1,7 +1,7 @@
 const Player = require('./Player');
 const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../utils/constants');
 const cardPowers = require('./powers/cardPowers');
-const { CardError, GameError, NotEnoughManaError } = require('./Errors');
+const { CardError, PlayerFieldFullError, GameError, NotEnoughManaError } = require('./Errors');
 const { getUserById } = require('../services/User.service');
 
 class Game {
@@ -55,17 +55,22 @@ class Game {
   playCard(player, cardId) {
     const cardIndex = player.hand.findIndex(c => c.id === cardId);
     if (cardIndex === -1) {
-      throw new CardError("Card not found in hand");
+      throw new CardError();
+    }
+    const card = player.hand[cardIndex];
+
+
+    if (player.field.length >= 5) {
+      throw new PlayerFieldFullError();      
     }
 
-    const card = player.hand[cardIndex];
     if (player.mana < card.cost) {
       throw new NotEnoughManaError();
     }
 
-    player.mana -= card.cost;
     player.field.push(card);
     player.hand.splice(cardIndex, 1);
+    player.mana -= card.cost;
 
     if (card.power) {
       const effects = Array.isArray(card.power) ? card.power : [card.power];
@@ -78,13 +83,25 @@ class Game {
     }
   }
 
-  attack(attacker, defender) {
-    // @TODO attack dmg
+  attack(attackerCard, defenderCard, attacker, defender) {
+    if(!attacker || !defender) { throw new GameError();}
+    if (!attackerCard) { throw new CardError();}
+    
+		if(defenderCard){
+			defenderCard.defense-=attackerCard.attack;
+			attackerCard.defense-=defenderCard.attack;
 
-    this.endGame();
-    if (defender.health <= 0 || attacker.health <= 0) {
-      this.endGame();
-    }
+			if(defenderCard.defense<=0){
+				defenderPlayer.field.splice(attacker.field.indexOf(defenderCard),1);
+			}
+			if(attackerCard.defense<=0){
+				attackerPlayer.field.splice(defender.field.indexOf(attackerCard),1);
+			}
+		}else{
+			defenderPlayer.health-=attackerCard.attack;
+			if(defenderPlayer.health<=0)this.endGame();
+		}
+
   }
 
   nextTurn() {

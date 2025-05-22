@@ -3,6 +3,7 @@ const ERROR_CODES = {
   GAME_NOT_FOUND: "GAME_NOT_FOUND",
   NOT_ENOUGH_MANA: "NOT_ENOUGH_MANA",
   CARD_ERROR: "CARD_ERROR",
+  PLAYER_FIELD_FULL: "PLAYER_FIELD_FULL",
 };
 
 class GameError extends Error {
@@ -28,6 +29,13 @@ class NotEnoughManaError extends GameError {
   }
 }
 
+class PlayerFieldFullError extends GameError {
+  constructor(message) {
+    super(message, ERROR_CODES.PLAYER_FIELD_FULL);
+    this.name = "PlayerFieldFullError";
+  }
+}
+
 class CardError extends GameError {
   constructor(message) {
     super(message, ERROR_CODES.CARD_ERROR);
@@ -40,5 +48,6 @@ module.exports = {
   CardError,
   GameNotFoundError,
   NotEnoughManaError,
+  PlayerFieldFullError,
   ERROR_CODES,
 };
