@@ -19,3 +19,15 @@ export const rejectFriendRequest = (friendNickname) => {
 export const getFriends = () => {
   return get('user/friends');
 }
+
+export const getAllUsers = () => {
+  return get('user/all-users');
+}
+
+export const getNotifications = () => {
+  return get('notifications');
+}
+
+export const hasPendingNotifications = () => {
+  return get('notifications/pending');
+}

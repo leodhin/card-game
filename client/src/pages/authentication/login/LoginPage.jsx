@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from "react-router-dom";
 
 import { login } from "../../../services/auth-service";
 import BackgroundImg from '../../../assets/background-login.png'; // Adjust the path to your 404 image
+import useSessionStore from "../../../stores/sessionStore";
 
 import "./LoginPage.css";
 
@@ -10,8 +11,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-
-  const isAuthenticated = localStorage.getItem('token');
+  const { isAuthenticated, login: loginState } = useSessionStore();
 
   if (isAuthenticated) {
     return <Navigate to="/" />;
@@ -22,7 +22,7 @@ function LoginPage() {
 
     try {
       const response = await login({ email, password });
-      localStorage.setItem("token", response.token);
+      loginState(response.user, response.token);
       navigate("/");
     } catch (error) {
       alert("Login failed. Please check your credentials.");

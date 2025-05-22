@@ -156,8 +156,9 @@ function gameSocketEvents(io) {
       });
     });
   }
+
   return {
-    getGames: () => gameController.getGames(),
+    getActiveGames: () => gameController.getGames(),
   };
 }
 

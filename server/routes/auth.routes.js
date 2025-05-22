@@ -25,10 +25,10 @@ router.post('/login', async (req, res) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const token = jwt.sign({ userId: user._id }, process.env.SESSION_SECRET, {
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.SESSION_SECRET, {
       expiresIn: '1h',
     });
-    res.status(200).json({ token });
+    res.status(200).json({ token, user: { email: user.email, nickname: user.nickname, role: user.role } });
     console.log("User logged ", user);
   } catch (err) {
     console.error(err);

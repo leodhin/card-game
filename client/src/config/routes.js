@@ -8,6 +8,8 @@ import { LoginPage, RegisterPage, ProfilePage } from '../pages/authentication';
 import NotFoundPage from '../pages/not-found';
 import DeckDetailsPage from "../pages/deck-details/DeckDetailsPage";
 import FriendPage from "../pages/friends-page";
+import AdminPage from "../pages/admin";
+import NotificationsPage from "../pages/notification-alert";
 
 const routesConfig = [
   { path: '/', component: HomePage, private: true },
@@ -22,6 +24,8 @@ const routesConfig = [
   { path: '/friends', title: "Friends", component: FriendPage, private: true },
   { path: '/login', component: LoginPage, private: false },
   { path: '/register', component: RegisterPage, private: false },
+  { path: '/admin', title: "Admin dashboard", component: AdminPage, private: true },
+  { path: '/notifications', title: "Notifications", component: NotificationsPage, private: true },
   { path: '*', component: NotFoundPage, private: false },
 ];
 

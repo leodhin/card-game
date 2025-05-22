@@ -1,4 +1,5 @@
 import axios from 'axios';
+import useSessionStore from '../stores/sessionStore';
 
 // Base URL for your API
 const BASE_URL = `${import.meta.env.VITE_SERVER_URL}/api/`;
@@ -15,23 +16,21 @@ const axiosInstance = axios.create({
 // Request Interceptor to add the Authorization token
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Retrieve the token from localStorage
-    const token = localStorage.getItem('token');
+    // Retrieve the token from the Zustand store using its getter
+    const token = useSessionStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Function to handle Axios errors
 const handleAxiosError = (error) => {
   if (error.response?.status === 401 || error.response?.status === 403) {
     console.error('Unauthorized access - redirecting to login');
-    localStorage.removeItem('token');
+    useSessionStore.getState().logout();
     // Redirect to the login page
     window.location.href = '/login';
   } else {

@@ -3,6 +3,7 @@ import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 import { toast } from 'react-toastify';
 
+import useSessionStore from "../stores/sessionStore";
 
 const useSocket = (serverUrl, gameId, nickname) => {
   const socketRef = useRef(null);
@@ -11,9 +12,9 @@ const useSocket = (serverUrl, gameId, nickname) => {
   const [error, setError] = useState(null); // Track connection errors
   const [data, setData] = useState(null); // Track game state data
   const [userId, setUserId] = useState(null); // Track user ID
+  const { token } = useSessionStore();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (token) {
       try {
         const decoded = jwtDecode(token);

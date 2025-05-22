@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listDecks, deleteDeck } from "../../services/deck-service";
-
+import { Fab } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import "./DeckList.css";
 import PageContainer from "../../containers/PageContainer";
 
@@ -37,6 +38,10 @@ function DeckListPage() {
 
   const handleNavigateToDeck = (deckId) => {
     navigate(`/deck/${deckId}`);
+  };
+
+  const handleCreateNewDeck = () => {
+    navigate('/deck-generator');
   };
 
   useEffect(() => {
@@ -78,6 +83,15 @@ function DeckListPage() {
           </div>
         ))}
       </div>
+
+      <Fab
+        color="tertiary"
+        aria-label="add"
+        onClick={handleCreateNewDeck}
+        style={{ position: 'fixed', bottom: 30, right: 30 }}
+      >
+        <AddIcon />
+      </Fab>
     </PageContainer>
   );
 }

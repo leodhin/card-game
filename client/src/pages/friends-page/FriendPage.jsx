@@ -68,24 +68,8 @@ const FriendsPage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <div className="loading">Loading friends...</div>
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer>
-        <div className="error">Error: {error}</div>
-      </PageContainer>
-    );
-  }
-
   return (
-    <PageContainer>
+    <PageContainer isLoading={loading} error={error}>
       <div className="friends-container">
         <div className="add-friend-section">
           <h2>Add a Friend</h2>

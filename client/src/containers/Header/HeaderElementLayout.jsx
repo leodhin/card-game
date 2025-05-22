@@ -12,7 +12,8 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
-// import { SideBar } from '../SideBar'; // Commented out the SideBar import
+
+import useSessionStore from '../../stores/sessionStore';
 
 const drawerWidth = 240;
 
@@ -25,7 +26,7 @@ const AppBar = styled(MuiAppBar, {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  width: '100%', // Ensure AppBar takes full width when closed
+  width: '100%',
   ...(open && {
     marginLeft: drawerWidth,
     width: `calc(100% - ${drawerWidth}px)`,
@@ -40,6 +41,7 @@ const HeaderElementLayout = (props) => {
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const { user, logout } = useSessionStore();
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -54,9 +56,8 @@ const HeaderElementLayout = (props) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Remove token from localStorage
-    alert('You have been logged out.');
-    navigate('/login'); // Redirect to login page
+    logout();
+    navigate('/login');
     handleMenuClose();
   };
 
@@ -66,8 +67,8 @@ const HeaderElementLayout = (props) => {
   };
 
   const isMenuOpen = Boolean(anchorEl);
-
   const menuId = 'primary-search-account-menu';
+
   const renderMenu = (
     <Menu
       anchorEl={anchorEl}
@@ -95,73 +96,24 @@ const HeaderElementLayout = (props) => {
         <>
           {/* HEADER */}
           <AppBar position="absolute" open={open}>
-            <Toolbar
-              sx={{
-                pr: '24px',
-                backgroundColor: '#121212',
-              }}
-            >
-              <Typography
-                component="h1"
-                variant="h6"
-                color="inherit"
-                noWrap
-                sx={{ flexGrow: 1 }}
-              >
+            <Toolbar sx={{ pr: '24px', backgroundColor: '#121212' }}>
+              <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
                 {props.title}
               </Typography>
 
               {/* Navigation Links */}
-              <Box
-                sx={{
-                  flexGrow: 1,
-                  display: 'flex',
-                  justifyContent: 'center',
-                }}
-              >
+              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
                 <Link
                   to="/"
-                  style={{
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    marginRight: '20px',
-                  }}
+                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
                 >
                   <Typography variant="button" color="inherit">
                     Home
                   </Typography>
                 </Link>
                 <Link
-                  to="/deck-generator"
-                  style={{
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    marginRight: '20px',
-                  }}
-                >
-                  <Typography variant="button" color="inherit">
-                    Deck Generator
-                  </Typography>
-                </Link>
-                <Link
-                  to="/card-generator"
-                  style={{
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    marginRight: '20px',
-                  }}
-                >
-                  <Typography variant="button" color="inherit">
-                    Card Generator
-                  </Typography>
-                </Link>
-                <Link
                   to="/card-list"
-                  style={{
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    marginRight: '20px',
-                  }}
+                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
                 >
                   <Typography variant="button" color="inherit">
                     Cards
@@ -169,11 +121,7 @@ const HeaderElementLayout = (props) => {
                 </Link>
                 <Link
                   to="/decks"
-                  style={{
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    marginRight: '20px',
-                  }}
+                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
                 >
                   <Typography variant="button" color="inherit">
                     Decks
@@ -181,24 +129,28 @@ const HeaderElementLayout = (props) => {
                 </Link>
                 <Link
                   to="/friends"
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
                 >
                   <Typography variant="button" color="inherit">
                     Friends
                   </Typography>
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px', display: 'flex', alignItems: 'center' }}
+                  >
+                    <Typography variant="button" color="inherit">
+                      Admin Dashboard
+                    </Typography>
+                  </Link>
+                )}
               </Box>
 
               <Box sx={{ flexGrow: 1 }} />
 
-              <Box
-                sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}
-              >
-                <IconButton
-                  size="large"
-                  aria-label="show notifications"
-                  color="inherit"
-                >
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+                <IconButton size="large" aria-label="show notifications" color="inherit" onClick={() => navigate('/notifications')}>
                   <NotificationsIcon />
                 </IconButton>
                 <IconButton

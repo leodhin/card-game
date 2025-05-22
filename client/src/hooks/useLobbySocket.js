@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import useSessionStore from "../stores/sessionStore";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
@@ -8,10 +9,11 @@ export const useMatchmakingSocket = () => {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
   const [match, setMatch] = useState(null);
+  const { logout, token } = useSessionStore();
 
   useEffect(() => {
     if (status === "queued") {
-      const token = localStorage.getItem("token");
+
       const socket = io(SERVER_URL + "/game", {
         extraHeaders: { authorization: `Bearer ${token}` },
       });
@@ -29,7 +31,7 @@ export const useMatchmakingSocket = () => {
 
       socket.on("unauthorized", (errorMsg) => {
         console.error("Unauthorized:", errorMsg);
-        localStorage.removeItem('token');
+        logout();
         window.location.href = '/login';
       });
 

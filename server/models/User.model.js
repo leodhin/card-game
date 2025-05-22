@@ -6,8 +6,10 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   nickname: { type: String, required: true, unique: true },
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  aiUsageRemaining: { type: Number, default: 5 },
 });
 
 UserSchema.pre('save', async function (next) {

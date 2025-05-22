@@ -92,12 +92,14 @@ class GameController extends EventEmitter {
     game.startGame();
   }
 
-  getGamesList() {
-    return Array.from(this.games.keys());
-  }
-
   getGames() {
-    return this.games;
+    return Array.from(this.games.values()).map(game => ({
+      gameId: game.gameId,
+      players: game.players.map(player => player.id),
+      currentTurn: game.currentTurn,
+      phase: game.phase,
+      chat: game.chat,
+    }));
   }
 
   getGame(gameId) {

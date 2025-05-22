@@ -1,7 +1,9 @@
 const express = require('express');
 const { isLoggedIn } = require('../middleware/http/requireAuthHTTP');
+const { hasAIUsage } = require('../middleware/http/requireAIUsageHTTP');
 const CardModel = require('../models/Card.model');
 const Card = require('../game/Card');
+const { consumeAIUsage } = require('../services/User.service');
 const { saveImage, removeImage } = require('../utils/utils');
 
 const router = express.Router();
@@ -141,7 +143,7 @@ router.put('/card/:cardId', isLoggedIn, async (req, res) => {
   }
 });
 
-router.post('/generate-cardimage', isLoggedIn, async (req, res) => {
+router.post('/generate-cardimage', isLoggedIn, hasAIUsage, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt) {
@@ -165,6 +167,8 @@ router.post('/generate-cardimage', isLoggedIn, async (req, res) => {
     });
 
     const data = await resp.json();
+
+    await consumeAIUsage(req.userId);
     return res.json({ image: data.output_url });
   } catch (error) {
     console.error(error);

@@ -1,6 +1,7 @@
 const User = require('../../models/User.model');
 const { getMatchHistory } = require('../../services/game.service');
-const { requestFriendship, getUserFriends, acceptFriendRequest, rejectFriendRequest } = require('../../services/User.service');
+const { requestFriendship, getUserFriends, acceptFriendRequest, rejectFriendRequest, getAllUsers } = require('../../services/User.service');
+const { addNotification } = require('../../services/Notification.service');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -32,6 +33,7 @@ exports.addPerson = async (req, res) => {
     const userId = req.userId;
     const result = await requestFriendship(userId, req.body?.friendNickname);
     if (result) {
+      const notification = await addNotification(userId, 'info', `You have a new friend request from ${req.body?.friendNickname}`);
       res.status(200).json({ message: 'User friendship request successfully requested' });
     }
     else {
@@ -84,5 +86,18 @@ exports.getFriends = async (req, res) => {
   } catch (error) {
     console.error('Error fetching friends:', error);
     res.status(500).json({ message: 'Error fetching friends', error: error.message });
+  }
+}
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await getAllUsers();
+    if (!users) {
+      return res.status(404).json({ error: 'No users found' });
+    }
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    res.status(500).json({ message: 'Error fetching all users', error: error.message });
   }
 }

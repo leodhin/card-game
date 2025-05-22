@@ -1,9 +1,10 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { HeaderElementLayout } from '../containers/Header';
+import useSessionStore from '../stores/sessionStore';
 
 const AuthenticationLayout = (props) => {
-  const isAuthenticated = localStorage.getItem('token');
-  const location = useLocation(); // Get the current location
+  const { isAuthenticated } = useSessionStore();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     return (

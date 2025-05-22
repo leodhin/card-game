@@ -15,7 +15,7 @@ function Card({ card, isFaceUp = true, onClick, style, onEdit, onDelete }) {
 
       const dx = e.clientX - (left + width / 2);
       const dy = e.clientY - (top + height / 2);
-      const maxAngle = 50;
+      const maxAngle = 30;
 
       const rotateY = -(dx / (width / 2)) * maxAngle;
       const rotateX = -(dy / (height / 2)) * maxAngle;

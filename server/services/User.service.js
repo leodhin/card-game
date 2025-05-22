@@ -138,3 +138,38 @@ exports.rejectFriendRequest = async (userId, friendNickname) => {
     throw error;
   }
 };
+
+exports.getAllUsers = async () => {
+  try {
+    const users = await UserModel.find().select('-password');
+    if (!users) {
+      throw new Error('No users found');
+    }
+    return users;
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    throw error;
+  }
+}
+
+exports.consumeAIUsage = async (userId) => {
+  try {
+    const user = await UserModel
+      .findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.aiUsageRemaining > 0) {
+      user.aiUsageRemaining -= 1;
+      await user.save();
+      return true;
+    } else {
+      throw new Error('No AI usage left');
+    }
+  }
+  catch (error) {
+    console.error('Error consuming AI usage:', error);
+    throw error;
+  }
+}
