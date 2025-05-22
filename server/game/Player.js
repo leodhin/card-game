@@ -2,10 +2,11 @@ const { GAME_STATE } = require('../utils/constants');
 const Deck = require('../models/Deck.model');
 
 class Player {
-  constructor(userId) {
+  constructor(userId, name) {
     this.hand = [];
     this.deck = {};
     this.id = userId;
+    this.name = name;
     this.state = GAME_STATE.WAITING;
     this.gameId = {};
     this.health = 10;
@@ -18,6 +19,7 @@ class Player {
   getPlayerState() {
     return {
       id: this.id,
+      name: this.name,
       state: this.state,
       gameId: this.gameId,
       health: this.health,
@@ -52,7 +54,7 @@ class Player {
   }
 
   regenerateMana() {
-    this.mana = Math.max(this.mana * 2, 1);
+    this.mana = this.mana + 1;
   }
 
   shuffleDeck() {
@@ -64,7 +66,7 @@ class Player {
 
   drawCard() {
     if (this.deck.length > 0) {
-      const card = this.deck.shift();
+      const card = this.deck.pop();
       this.hand.push(card);
 
       const baseUrl = process.env.SERVER_URL;

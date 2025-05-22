@@ -1,27 +1,30 @@
 const { v4: uuidv4 } = require('uuid');
+const EventEmitter = require('events');
 const Game = require('../../game/Game');
-const { SOCKET_EVENTS, PHASE_STATE } = require('../../utils/constants');
+const { SOCKET_EVENTS, PHASE_STATE, GAME_STATE } = require('../../utils/constants');
 
-class GameController {
-  constructor(gameNamespace) {
-    this.gameNamespace = gameNamespace;
+class GameController extends EventEmitter {
+  constructor() {
+    super();
     this.games = new Map();
   }
 
   async createGame(gameId, userIds) {
     const game = await new Game(gameId, userIds);
     this.games.set(gameId, game);
-
     return gameId;
   }
 
   handleGameEnd(gameId) {
-    this.gameNamespace.in(gameId).disconnectSockets(true);
-    delete this.existingGames[gameId];
+    const game = this.games.get(gameId);
+    if (game) {
+      this.games.delete(gameId);
+      this.emit('gameFinished', gameId);
+    }
   }
 
   playerDrawCard(gameId, userId) {
-    const game = this.existingGames[gameId];
+    const game = this.games.get(gameId);
     if (!game) return;
 
     const player = game.getPlayer(userId);
@@ -45,7 +48,7 @@ class GameController {
   }
 
   playerAttack(gameId, userId) {
-    const game = this.existingGames[gameId];
+    const game = this.games.get(gameId);
     if (!game) return;
 
     const attacker = game.getPlayer(userId);
@@ -53,36 +56,44 @@ class GameController {
     if (!attacker || !defender) return;
 
     game.attack(attacker, defender);
+
+    if (this.isGameOver(gameId)) {
+      this.handleGameEnd(gameId);
+      return;
+    }
     game.nextTurn();
-    game.syncGameState();
+  }
+
+  isGameOver(gameId) {
+    const game = this.games.get(gameId);
+    return game?.state === GAME_STATE.FINISHED;
   }
 
   playerPassTurn(gameId, userId) {
-    const game = this.existingGames[gameId];
+    const game = this.games.get(gameId);
     if (!game) return;
 
     game.nextTurn();
-    game.syncGameState();
   }
 
   playerSendMessage(gameId, userId, message) {
-    const game = this.existingGames[gameId];
+    const game = this.games.get(gameId);
     if (!game) return;
 
     const player = game.getPlayer(userId);
     if (!player) return;
 
+    return game.sendMessage(player, message);
   }
 
   startGame(gameId) {
-    const game = this.existingGames[gameId];
+    const game = this.games.get(gameId);
     if (!game) return;
-
     game.startGame();
   }
 
   getGamesList() {
-    return Object.keys(this.existingGames);
+    return Array.from(this.games.keys());
   }
 
   getGames() {
@@ -103,33 +114,20 @@ class GameController {
   }
 
   getRoomIdByUserId(userId) {
-    for (const [gameId, game] of this.games.entries()) {
-      if (game.players.some(player => player.id === userId)) {
-        return gameId;
-      }
-    }
-    return null;
+    return this.getGameIdByUserId(userId);
   }
 
   getMatchIdByUserId(userId) {
-    for (const [gameId, game] of this.games.entries()) {
-      if (game.players.some(player => player.id === userId)) {
-        return gameId;
-      }
-    }
-    return null;
+    return this.getGameIdByUserId(userId);
   }
 
   getPlayerByUserId(userId) {
     for (const game of this.games.values()) {
       const player = game.getPlayer(userId);
-      if (player) {
-        return player;
-      }
+      if (player) return player;
     }
     return null;
   }
-
 }
 
 module.exports = GameController;

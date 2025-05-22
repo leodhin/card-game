@@ -1,45 +1,174 @@
-/* Add these styles at the end of your ProfilePage.css file */
+.profile-container {}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 4px solid #f7d155;
+  /* highlight border */
+}
+
+.profile-details {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-details p {
+  font-size: 1rem;
+  margin: 4px 0;
+}
 
 .match-history {
-  margin-top: 30px;
+  margin: 100px 0;
 }
 
 .match-history h2 {
-  margin-bottom: 20px;
-  font-size: 1.8rem;
-  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.match-history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .match-item {
-  background: #272727;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   margin-bottom: 15px;
   padding: 15px;
-  border-radius: 8px;
-  list-style: none;
+  transition: box-shadow 0.3s;
+}
+
+.match-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .match-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  border-bottom: 1px solid #444;
-  padding-bottom: 10px;
   margin-bottom: 10px;
 }
 
-.match-user {
-  flex: 1;
-  text-align: center;
-  font-size: 1.1rem;
+.match-user p {
+  font-size: 1rem;
+  margin: 0 10px;
+  font-weight: bold;
+  color: #333;
 }
 
-.match-vs {
-  width: 50px;
-  text-align: center;
-  font-weight: 600;
+.match-vs p {
+  font-size: 1rem;
+  margin: 0 10px;
+  color: #666;
 }
 
 .match-details p {
-  margin: 4px 0;
   font-size: 0.9rem;
+  margin: 5px 0;
+  color: #555;
+}
+
+/* Existing status chips, adjust as needed */
+.match-status-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Finished: green */
+.match-status-finished {
+  background-color: #28a745;
+}
+
+/* In-Progress: orange */
+.match-status-in-progress {
+  background-color: #ffc107;
+}
+
+/* Waiting: gray */
+.match-status-waiting {
+  background-color: #6c757d;
+}
+
+/* New Unknown status: adjust the color as desired; here we use a soft purple */
+.match-status-unknown {
+  background-color: #6f42c1;
+}
+
+.no-match-history {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #777;
+}
+
+/* filepath: c:\Users\loren\Projects\card-game\client\src\pages\people\AddPeoplePage.css */
+.add-people-container {
+  max-width: 500px;
+  margin: 2rem auto;
+  background: #1e1e1e;
+  padding: 2rem;
+  border-radius: 12px;
+  color: #f7f7f7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.add-people-container h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.add-people-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.add-people-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.add-people-form input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #f7f7f7;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #f7d155;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.submit-button:hover {
+  background: #f0c040;
+}
+
+.success-message {
+  text-align: center;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  text-align: center;
+  color: #dc3545;
+  margin-bottom: 1rem;
 }

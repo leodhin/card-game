@@ -27,6 +27,12 @@ export const useMatchmakingSocket = () => {
         console.error("Socket error:", error);
       });
 
+      socket.on("unauthorized", (errorMsg) => {
+        console.error("Unauthorized:", errorMsg);
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      });
+
       socketRef.current?.emit("queue-1v1");
 
       // Handle disconnection on unmount

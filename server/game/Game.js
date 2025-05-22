@@ -1,7 +1,8 @@
 const Player = require('./Player');
 const { GAME_STATE, SOCKET_EVENTS, PLAYER_STATE, PHASE_STATE } = require('../utils/constants');
 const cardPowers = require('./powers/cardPowers');
-const { CardError } = require('./Errors');
+const { CardError, GameError, NotEnoughManaError } = require('./Errors');
+const { getUserById } = require('../services/User.service');
 
 class Game {
   constructor(gameId, userIds) {
@@ -10,7 +11,7 @@ class Game {
     this.state = GAME_STATE.WAITING;
     this.currentTurn = 0;
     this.phase = PHASE_STATE.WAIT;
-
+    this.chat = [];
     this.init(userIds);
   }
 
@@ -28,6 +29,8 @@ class Game {
           state.hand = { count: state.hand.length };
         }
 
+        state.field = state.field;
+
         // Sanitize deck
         state.deck = { count: state.deck.length };
 
@@ -38,17 +41,9 @@ class Game {
     };
   }
 
-  syncGameState() {
-    this.players.forEach(player => {
-      player.socket.emit(
-        SOCKET_EVENTS.SYNC_GAME_STATE,
-        this.getSanitizedGameState(player.id)
-      );
-    });
-  }
-
   async addPlayer(userId) {
-    const newPlayer = await new Player(userId);
+    const player = await getUserById(userId);
+    const newPlayer = await new Player(userId, player.nickname);
 
     this.players.push(newPlayer);
   }
@@ -62,22 +57,16 @@ class Game {
     if (cardIndex === -1) {
       throw new CardError("Card not found in hand");
     }
-    if (player.field.length > 0) {
-      throw new CardError("There is already a card in the field");
-    }
 
     const card = player.hand[cardIndex];
     if (player.mana < card.cost) {
-      throw new CardError("You don't have enough mana to play this card");
+      throw new NotEnoughManaError();
     }
 
     player.mana -= card.cost;
     player.field.push(card);
     player.hand.splice(cardIndex, 1);
-    this.phase = "combat";
-    console.log("Card played", card);
 
-    // Apply dynamic power effects if any
     if (card.power) {
       const effects = Array.isArray(card.power) ? card.power : [card.power];
       const opponent = this.players.find(p => p.id !== player.id);
@@ -90,62 +79,19 @@ class Game {
   }
 
   attack(attacker, defender) {
-    if (!attacker.field.length > 0) {
-      attacker.socket.emit(SOCKET_EVENTS.ERROR, "You cannot attack without a card in the field");
-      return;
-    }
+    // @TODO attack dmg
 
-    const atkCard = attacker.field[0];
-
-    if (!defender.field.length > 0) {
-      defender.health -= atkCard.attack;
-      this.syncGameState();
-      return;
-    }
-
-    const defCard = defender.field[0];
-
-    const extraDamageToDefender = Math.max(0, atkCard.attack - defCard.defense);
-    const extraDamageToAttacker = Math.max(0, defCard.attack - atkCard.defense);
-
-    const remainingDefCardDefense = defCard.defense - atkCard.attack;
-    const remainingAtkCardDefense = atkCard.defense - defCard.attack;
-
-    if (remainingDefCardDefense <= 0) {
-      defender.field.shift();
-    } else {
-      defCard.defense = remainingDefCardDefense;
-    }
-
-    if (remainingAtkCardDefense <= 0) {
-      attacker.field.shift();
-    } else {
-      atkCard.defense = remainingAtkCardDefense;
-    }
-
-    defender.health -= extraDamageToDefender;
-    attacker.health -= extraDamageToAttacker;
-
-    this.phase = "wait";
-
+    this.endGame();
     if (defender.health <= 0 || attacker.health <= 0) {
       this.endGame();
-    } else {
-      this.syncGameState();
     }
   }
 
   nextTurn() {
-    this.currentTurn = (this.currentTurn + 1) % this.players.length;
+    this.currentTurn = this.currentTurn + 1 >= this.players.length ? 0 : this.currentTurn + 1;
     const currentPlayer = this.players[this.currentTurn];
-
-    this.phase = PHASE_STATE.DRAW;
     currentPlayer.regenerateMana();
     currentPlayer.drawCard();
-    this.syncGameState();
-
-    this.phase = PHASE_STATE.PLAY;
-    this.syncGameState();
   }
 
   startGame() {
@@ -179,34 +125,35 @@ class Game {
   pauseGame() {
     if (this.state === GAME_STATE.PLAYING) {
       this.state = GAME_STATE.PAUSED;
-      this.syncGameState();
     }
   }
 
   resumeGame() {
     if (this.state === GAME_STATE.PAUSED) {
       this.state = GAME_STATE.PLAYING;
-      this.syncGameState();
     }
   }
 
   endGame() {
-    this.io.to(this.name).emit(SOCKET_EVENTS.GAME_OVER);
     this.state = GAME_STATE.FINISHED;
-
-    setTimeout(() => {
-      for (const player of this.players) {
-        player.state = PLAYER_STATE.WAITING;
-      }
-
-      this.syncGameState();
-    }, 3000);
   }
 
   checkEndGame() {
     return this.players.filter(player => player.state === PLAYER_STATE.PLAYING).length == 1;
   }
 
+  sendMessage(player, message) {
+    const sanitizedMessage = message.replace(/<[^>]*>/g, ''); // Sanitize HTML tags
+    const sanitizedPlayerName = player.name.replace(/<[^>]*>/g, ''); // Sanitize HTML tags
+    const sanitizedMessageObject = {
+      player: sanitizedPlayerName,
+      message: sanitizedMessage,
+      timestamp: new Date().toISOString()
+    };
+    this.chat.push(sanitizedMessageObject);
+
+    return this.chat;
+  }
 }
 
 module.exports = Game;

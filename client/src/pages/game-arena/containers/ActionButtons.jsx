@@ -1,27 +1,15 @@
-import React from "react";
-
-function ActionButtons({ emitEvent, socket }) {
+function ActionButtons({ onPass, onAttack }) {
   return (
     <div className="action-buttons">
       <button
         className="attack-button"
-        onClick={() => {
-          if (socket) {
-            console.info("Emitting attack event");
-            emitEvent("attack");
-          }
-        }}
+        onClick={onAttack}
       >
         Attack!
       </button>
       <button
         className="pass-button"
-        onClick={() => {
-          if (socket) {
-            console.info("Emitting pass event");
-            emitEvent("pass");
-          }
-        }}
+        onClick={onPass}
       >
         Pass
       </button>

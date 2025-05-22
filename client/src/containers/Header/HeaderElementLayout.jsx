@@ -9,7 +9,6 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -92,113 +91,159 @@ const HeaderElementLayout = (props) => {
 
   return (
     <>
-      {/* SIDEBAR */}
-      {/* <SideBar open={open} toggleDrawer={toggleDrawer} /> */}
-
-      {/* HEADER */}
-      <AppBar position="absolute" open={open}>
-        <Toolbar
-          sx={{
-            pr: '24px',
-            backgroundColor: '#121212',
-          }}
-        >
-
-          {/*
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            onClick={toggleDrawer}
-            sx={{
-              marginRight: '20px', // Adjusted margin
-              ...(open && { display: 'none' }),
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          */}
-          <Typography
-            component="h1"
-            variant="h6"
-            color="inherit"
-            noWrap
-            sx={{ flexGrow: 1 }}
-          >
-            {props.title}
-          </Typography>
-
-          {/* Navigation Links */}
-          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-            <Link
-              to="/"
-              style={{
-                textDecoration: 'none',
-                color: 'inherit',
-                marginRight: '20px',
+      {!props.hideHeader && (
+        <>
+          {/* HEADER */}
+          <AppBar position="absolute" open={open}>
+            <Toolbar
+              sx={{
+                pr: '24px',
+                backgroundColor: '#121212',
               }}
             >
-              <Typography variant="button" color="inherit">
-                Home
+              <Typography
+                component="h1"
+                variant="h6"
+                color="inherit"
+                noWrap
+                sx={{ flexGrow: 1 }}
+              >
+                {props.title}
               </Typography>
-            </Link>
-            <Link to="/deck-generator" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
-              <Typography variant="button" color="inherit">
-                Deck Generator
-              </Typography>
-            </Link>
-            <Link to="/card-generator" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
-              <Typography variant="button" color="inherit">
-                Card Generator
-              </Typography>
-            </Link>
-            <Link to="/card-list" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
-              <Typography variant="button" color="inherit">
-                Cards
-              </Typography>
-            </Link>
-            <Link to="/decks" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Typography variant="button" color="inherit">
-                Decks
-              </Typography>
-            </Link>
-          </Box>
 
-          <Box sx={{ flexGrow: 1 }} />
+              {/* Navigation Links */}
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
+                <Link
+                  to="/"
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    marginRight: '20px',
+                  }}
+                >
+                  <Typography variant="button" color="inherit">
+                    Home
+                  </Typography>
+                </Link>
+                <Link
+                  to="/deck-generator"
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    marginRight: '20px',
+                  }}
+                >
+                  <Typography variant="button" color="inherit">
+                    Deck Generator
+                  </Typography>
+                </Link>
+                <Link
+                  to="/card-generator"
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    marginRight: '20px',
+                  }}
+                >
+                  <Typography variant="button" color="inherit">
+                    Card Generator
+                  </Typography>
+                </Link>
+                <Link
+                  to="/card-list"
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    marginRight: '20px',
+                  }}
+                >
+                  <Typography variant="button" color="inherit">
+                    Cards
+                  </Typography>
+                </Link>
+                <Link
+                  to="/decks"
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    marginRight: '20px',
+                  }}
+                >
+                  <Typography variant="button" color="inherit">
+                    Decks
+                  </Typography>
+                </Link>
+                <Link
+                  to="/friends"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <Typography variant="button" color="inherit">
+                    Friends
+                  </Typography>
+                </Link>
+              </Box>
 
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-            <IconButton size="large" aria-label="show notifications" color="inherit">
-              <NotificationsIcon />
-            </IconButton>
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
+              <Box sx={{ flexGrow: 1 }} />
+
+              <Box
+                sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}
+              >
+                <IconButton
+                  size="large"
+                  aria-label="show notifications"
+                  color="inherit"
+                >
+                  <NotificationsIcon />
+                </IconButton>
+                <IconButton
+                  size="large"
+                  edge="end"
+                  aria-label="account of current user"
+                  aria-haspopup="true"
+                  onClick={handleProfileMenuOpen}
+                  color="inherit"
+                >
+                  <AccountCircle />
+                </IconButton>
+              </Box>
+            </Toolbar>
+            <CssBaseline />
+            {/* MAIN CONTENT when header is NOT hidden */}
+            <Box
+              component="main"
+              sx={{
+                background: "#1E1E1E",
+                flexGrow: 1,
+                overflowX: 'hidden',
+              }}
             >
-              <AccountCircle />
-            </IconButton>
-          </Box>
-        </Toolbar>
+              <Container maxWidth="lg" sx={{ height: '100%', pt: 4, pb: 4 }}>
+                {props.children}
+              </Container>
+            </Box>
+          </AppBar>
+          {renderMenu}
+        </>
+      )}
 
-        <CssBaseline />
-        {/* MAIN CONTENT */}
-        <Box
-          component="main"
-          sx={{
-            background: "#1E1E1E",
-            flexGrow: 1,
-            overflowX: 'hidden', // Prevent horizontal scrolling
-          }}
-        >
-          <Container maxWidth="lg" sx={{ height: '100%', pt: 4, pb: 4 }}>
-            {props.children}
-          </Container>
-        </Box>
-      </AppBar>
-      {renderMenu}
+      <Box
+        component="main"
+        sx={{
+          background: "#1E1E1E",
+          flexGrow: 1,
+          overflowX: 'hidden',
+        }}
+      >
+        <Container maxWidth="lg" sx={{ height: '100%', pt: 4, pb: 4 }}>
+          {props.children}
+        </Container>
+      </Box>
     </>
   );
 };

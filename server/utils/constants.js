@@ -47,4 +47,12 @@ module.exports.SOCKET_EVENTS = {
   UNAUTHORIZED: 'unauthorized'
 };
 
+module.exports.ERROR_MESSAGES = {
+  GAME_NOT_FOUND: 'Game not found.',
+  NOT_ENOUGH_PLAYERS: 'Not enough players.',
+  NOT_ENOUGH_MANA: 'Not enough mana.',
+  PLAYER_NOT_FOUND: 'Player not found.',
+  PLAYER_NOT_IN_GAME: 'You are not a player in this game.'
+};
+
 module.exports.PIXEL_DISTANCE = 5;

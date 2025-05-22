@@ -1,21 +1,16 @@
 .card {
-  width: 180px;
-  height: 240px;
-
+  width: 10rem;
+  height: 12rem;
   position: relative;
   overflow: hidden;
   border-radius: 12px;
 
-  /* Illustration */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 
-  /* Pokémon‑like yellow border */
-  border: 6px solid #f7d155;
-  /* bright outer ring */
+  border: 2px solid #f7d155;
   outline: 2px solid #b39128;
-  /* darker edge for depth */
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
 }
 
@@ -23,8 +18,8 @@
 .mana-display,
 .attack-display,
 .defense-display {
-  width: 32px;
-  height: 32px;
+  min-width: 18%;
+  height: 13%;
   border-radius: 50%;
   display: flex;
   align-items: center;

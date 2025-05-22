@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
+import { toast } from 'react-toastify';
 
 
 const useSocket = (serverUrl, gameId, nickname) => {
@@ -68,14 +69,14 @@ const useSocket = (serverUrl, gameId, nickname) => {
 
     // Handle errors
     socket.on("error", (errorMsg) => {
-      if (errorMsg === "Game not found.") {
+      if (errorMsg === "NOT_ENOUGH_MANA") {
+        toast.error("Not enough mana to play this card.");
+      }
+      else if (errorMsg === "Game not found.") {
         console.error("Game not found.");
         setError("Game not found. Please check the game ID.");
-      } else if (errorMsg === "You are not a player in this game.") {
-        console.error("You are not a player in this game.");
-        setError("You are not a player in this game. Please check your game ID.");
       } else {
-        console.error("Error:", errorMsg);
+        toast.error("Something went wrong");
       }
       setConnecting(false);
     });
@@ -110,15 +111,31 @@ const useSocket = (serverUrl, gameId, nickname) => {
     };
   }, []);
 
-  // Emit events to the server
-  const emitEvent = (event, data) => {
-    if (socketRef.current) {
-      console.info(`Emitting event: ${event}`, data);
-      socketRef.current.emit(event, data);
-    }
+
+  const api = {
+    playerDrawCard: () => {
+      if (socketRef.current) {
+        socketRef.current.emit("drawCard");
+      }
+    },
+    playerPlayCard: (cardIndex) => {
+      if (socketRef.current) {
+        socketRef.current.emit("playCard", cardIndex);
+      }
+    },
+    playerAttack: (attacker, defender) => {
+      if (socketRef.current) {
+        socketRef.current.emit("attack");
+      }
+    },
+    playerPassTurn: () => {
+      if (socketRef.current) {
+        socketRef.current.emit("pass");
+      }
+    },
   };
 
-  return { socket: socketRef.current, emitEvent, connecting, hasjoined, error, data, userId };
+  return { socket: socketRef.current, api, connecting, hasjoined, error, data, userId };
 };
 
 export default useSocket;

@@ -1,4 +1,3 @@
-// HomePage.tsx
 import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { HeaderElementLayout } from "../../containers/Header";
@@ -11,18 +10,15 @@ function HomePage() {
 
   const { queue, cancel, status, match } = useMatchmakingSocket();
 
-  /* Jump to the play page as soon as we’re matched */
   useEffect(() => {
     if (match) navigate(`/game/${match.gameId}`, { state: match });
   }, [match, navigate]);
 
-  /* Button handler: enqueue when idle, or let the player cancel if they change their mind */
   const handleFindGame = useCallback(() => {
     if (status === "idle") queue();
     else if (status === "queued") cancel();
   }, [status, queue, cancel]);
 
-  /* Simple text/loader you can replace with a spinner */
   const buttonLabel =
     status === "queued" ? "Looking for opponent… (cancel)" : "Play Game";
 
@@ -39,11 +35,22 @@ function HomePage() {
             height: "100%",
           }}
         >
+          <div className="home-intro">
+            <h1>Play your best deck</h1>
+            <p>
+              Engage in intense card battles against strategic opponents. Learn
+              your skills, build your deck, and prove your mastery!
+            </p>
+            <p>
+              Explore game rules, check out our tutorials, or dive straight into
+              the action.
+            </p>
+          </div>
           <div className="home-center">
             <button
               onClick={handleFindGame}
               className="play-game-button"
-              disabled={status === "matched"} /* matched → navigate next frame */
+              disabled={status === "matched"}
             >
               {buttonLabel}
             </button>

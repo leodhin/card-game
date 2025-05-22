@@ -2,10 +2,9 @@ import React from "react";
 import { useDrop } from "react-dnd";
 import Card, { DraggableCard } from "../../../components/Card";
 
-
 function DroppableArea({ title, onDrop, style }) {
   const [{ isOver }, drop] = useDrop(() => ({
-    accept: 'CARD',
+    accept: "CARD",
     drop: (item) => onDrop(item),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
@@ -15,11 +14,8 @@ function DroppableArea({ title, onDrop, style }) {
   return (
     <div
       ref={drop}
-      className="active-cards"
-      style={{
-        backgroundColor: isOver ? '#d4edda' : null,
-        ...style,
-      }}
+      className={`active-cards droppable-area ${isOver ? "active-drop" : ""}`}
+      style={style}
     >
       {title}
     </div>
@@ -29,12 +25,14 @@ function DroppableArea({ title, onDrop, style }) {
 function MiddleArea({ opponentActiveCards, playerActiveCards, handleDropOnPlayer }) {
   return (
     <div className="middle-area">
-      <div className="active-cards" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {opponentActiveCards.length > 0
-          ? opponentActiveCards.map((card) => (
-            <Card key={card.id} card={card} />
-          ))
-          : "Opponent Active Cards"}
+      <div
+        className="active-cards"
+      >
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+          {opponentActiveCards.length > 0
+            ? opponentActiveCards.map((card) => <Card key={card.id} card={card} />)
+            : null}
+        </div>
       </div>
       <DroppableArea
         title={
@@ -42,10 +40,10 @@ function MiddleArea({ opponentActiveCards, playerActiveCards, handleDropOnPlayer
             ? playerActiveCards.map((card) => (
               <DraggableCard key={card.id} card={card} isActionable={true} isDraggable={false} />
             ))
-            : "Player Active Cards"
+            : null
         }
         onDrop={handleDropOnPlayer}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "10px" }}
       />
     </div>
   );

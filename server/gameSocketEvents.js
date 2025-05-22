@@ -2,8 +2,9 @@ const GameController = require('./controllers/socket/game.controller');
 const { SOCKET_EVENTS } = require('./utils/constants');
 const { verifySocketAuth } = require('./middleware/socket/requireAuthSocket');
 const Matchmaker = require('./matchmaker');
+const { updateMatchHistory } = require('./services/game.service');
 
-const { CardError } = require('./game/Errors');
+const { NotEnoughManaError, ERROR_CODES } = require('./game/Errors');
 
 function gameSocketEvents(io) {
   const gameNamespace = io.of('/game');
@@ -17,7 +18,7 @@ function gameSocketEvents(io) {
   gameNamespace.on('connection', async (socket) => {
     const userId = socket?.request?.user?.userId;
 
-    socket.use((event, next) => {
+    socket.use(async (event, next) => {
       if (!userId) {
         socket.emit(SOCKET_EVENTS.ERROR, 'User ID is missing.');
         return;
@@ -33,6 +34,14 @@ function gameSocketEvents(io) {
       const queueId = matchmaker.getQueueIdByUserId(userId);
       if (queueId) {
         socket.emit(SOCKET_EVENTS.ERROR, 'You are already in a queue.');
+        return;
+      }
+
+      // Check if the game has already finished
+      const gameId = socket.request.gameId;
+
+      if (gameId && gameController.isGameOver(gameId)) {
+        socket.emit(SOCKET_EVENTS.ERROR, 'The game has already finished.');
         return;
       }
 
@@ -57,6 +66,7 @@ function gameSocketEvents(io) {
         return;
       }
       socket.join(gameId);
+      socket.request.gameId = gameId;
       socket.emit(SOCKET_EVENTS.JOINED_ROOM, gameId);
       socket.emit(SOCKET_EVENTS.SYNC_GAME_STATE, game.getSanitizedGameState(userId));
     });
@@ -65,30 +75,56 @@ function gameSocketEvents(io) {
       gameController.playerDrawCard(gameId, userId);
     });
 
-    // Listen for the event when a player plays a card
-    socket.on(SOCKET_EVENTS.PLAY_CARD, (cardIndex) => {
+    socket.on(SOCKET_EVENTS.PLAY_CARD, async (cardIndex) => {
       try {
+        const gameId = socket.request.gameId;
         gameController.playerPlayCard(userId, cardIndex);
+        await updatePlayersGameState(gameId);
       } catch (error) {
-        if (error instanceof CardError) {
-          socket.emit(SOCKET_EVENTS.ERROR, error.message);
-        } else {
-          console.error('Error playing card:', error);
-          socket.emit(SOCKET_EVENTS.ERROR, 'An error occurred while playing the card.');
+        if (error instanceof NotEnoughManaError) {
+          socket.emit(SOCKET_EVENTS.ERROR, ERROR_CODES.NOT_ENOUGH_MANA);
+          return;
         }
+
+        console.error('Error playing card:', error);
+        socket.emit(SOCKET_EVENTS.ERROR, 'An error occurred while playing the card.');
       }
     });
 
-    socket.on(SOCKET_EVENTS.ATTACK, () => {
-      gameController.playerAttack(gameId, userId);
+    socket.on(SOCKET_EVENTS.ATTACK, async () => {
+      try {
+        const gameId = socket.request.gameId;
+        gameController.playerAttack(gameId, userId);
+        await updatePlayersGameState(gameId);
+      }
+      catch (error) {
+        console.error('Error attacking:', error);
+        socket.emit(SOCKET_EVENTS.ERROR, 'An error occurred while attacking.');
+      }
     });
 
-    socket.on(SOCKET_EVENTS.PASS, () => {
-      gameController.playerPassTurn(gameId, userId);
+    socket.on(SOCKET_EVENTS.PASS, async () => {
+      try {
+        const gameId = socket.request.gameId;
+        gameController.playerPassTurn(gameId, userId);
+        await updatePlayersGameState(gameId);
+      }
+      catch (error) {
+        console.error('Error passing turn:', error);
+        socket.emit(SOCKET_EVENTS.ERROR, 'An error occurred while passing the turn.');
+      }
     });
 
     socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
-      gameController.playerSendMessage(gameId, userId, message);
+      try {
+        const gameId = socket.request.gameId;
+        const chat = gameController.playerSendMessage(gameId, userId, message);
+        gameNamespace.to(gameId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, chat);
+      }
+      catch (error) {
+        console.error('Error sending message:', error);
+        socket.emit(SOCKET_EVENTS.ERROR, 'An error occurred while sending the message.');
+      }
     });
 
     socket.on('disconnect', () => {
@@ -100,6 +136,26 @@ function gameSocketEvents(io) {
     });
   });
 
+  // Listen for game state changes and update players
+  gameController.on('gameFinished', (gameId) => {
+    console.log(`Game finished: ${gameId}`);
+    updateMatchHistory(gameId, { status: "finished" }).catch(err => console.error('Error updating match history:', err));
+  });
+
+  // Helper function to update players' game state
+  const updatePlayersGameState = async (gameId) => {
+    const game = gameController.getGame(gameId);
+    if (!game) return;
+
+    await gameNamespace.in(gameId).fetchSockets().then((sockets) => {
+      sockets.forEach((socket) => {
+        const userId = game.getPlayer(socket.request.user.userId);
+        if (userId) {
+          socket.emit(SOCKET_EVENTS.SYNC_GAME_STATE, game.getSanitizedGameState(userId.id));
+        }
+      });
+    });
+  }
   return {
     getGames: () => gameController.getGames(),
   };

@@ -1,41 +1,52 @@
-.game-board {}
+.game-board {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
 
-
-
-/* Middle area (Active Cards) */
 .middle-area {
   display: flex;
   flex-direction: column;
-  background-color: #727272a6;
+  justify-content: space-between;
+  background-image: url('../../assets/board-tile.png');
+  background-repeat: repeat;
+  background-position: center;
+  flex: 10;
+  border: 2px solid #444;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.middle-area::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.3), transparent 70%);
+  pointer-events: none;
+  border-radius: 15px;
 }
 
 /* Opponent Active Cards */
 .middle-area .active-cards {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  /* Display cards in a column */
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 10px;
-  margin: 0 10px;
-  min-height: 150px;
   transition: background-color 0.3s ease;
 }
 
 /* Player Active Cards */
 .middle-area .droppable-area {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  /* Display cards in a column */
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-  margin: 0 10px;
-  min-height: 150px;
   border-radius: 10px;
-  transition: background-color 0.3s ease;
 }
 
 
@@ -45,7 +56,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 10px;
+  flex: 2;
 }
 
 /* Player area */
@@ -54,16 +65,19 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 10px;
+  flex: 2;
 }
 
-/* Player and opponent cards */
-.player-cards,
-.opponent-cards {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 30px;
+.tcg-card-wrapper {
+  position: absolute;
+  transform: translateX(var(--offsetX)) rotate(var(--rotation));
+  transition: transform 0.3s ease;
+}
+
+/* On hover, add scale */
+.tcg-card-wrapper:hover {
+  z-index: 999 !important;
+  transform: translateX(var(--offsetX)) rotate(var(--rotation)) scale(1.1);
 }
 
 /* Stack container */
@@ -72,15 +86,6 @@
   width: 100px;
   height: 150px;
   cursor: pointer;
-}
-
-/* Stack card styling */
-.stack-card {
-  width: 100%;
-  height: 100%;
-  background-color: #ccc;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Animated card */
@@ -185,33 +190,135 @@
 .left-profiles {
   position: absolute;
   left: 10px;
-  top: 100px;
-  bottom: 10px;
+  top: 20px;
+  bottom: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   z-index: 1000;
 }
 
-/* Common profile styling */
+/* Profile container styling */
 .profile {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.75);
-  padding: 5px 10px;
-  border-radius: 8px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
+/* Animated border for active turn */
+.active-turn::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #00ff00, transparent, #00ff00, transparent);
+  background-size: 200% 100%;
+  z-index: -1;
+  animation: borderTravel 2s linear infinite;
+}
+
+@keyframes borderTravel {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* Profile picture styling */
 .profile-pic {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #f7d155;
 }
 
+/* Profile name styling */
 .profile-name {
-  color: #fff;
-  font-weight: bold;
+  color: #f7f7f7;
+  font-weight: 600;
   font-size: 1rem;
+}
+
+/* Fancy drop highlight for DroppableArea */
+.droppable-area {
+  transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+  background-color: transparent;
+}
+
+.droppable-area.active-drop {
+  background: rgba(212, 237, 218, 0.6);
+  border: 2px dashed #28a745;
+  box-shadow: 0 0 10px 2px rgba(40, 167, 69, 0.6);
+}
+
+.action-buttons-container {
+  position: fixed;
+  bottom: 50%;
+  right: 0%;
+  transform: translateX(-50%);
+  border-radius: 8px;
+  z-index: 900;
+}
+
+.chat-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1e1e1e;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.chat-overlay {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  height: 450px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+  transition: opacity 0.3s ease;
+}
+
+.chat-overlay.closed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-overlay.open {
+  opacity: 1;
+}
+
+.chat-close-btn {
+  background: #dc3545;
+  border: none;
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  align-self: flex-end;
+  margin: 5px;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.chat-close-btn:hover {
+  background: #c82333;
 }

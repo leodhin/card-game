@@ -2,6 +2,7 @@
 const { v4: uuidv4 } = require('uuid');
 
 const { logMatchHistory } = require('./services/game.service');
+const { getUserById } = require('./services/User.service');
 
 class Matchmaker {
   constructor(io, gameController) {
@@ -41,6 +42,9 @@ class Matchmaker {
     this.waiting.delete(id2);
 
     const roomId = uuidv4();
+    // Get the nicknames of the players
+    const player1 = await getUserById(id1);
+    const player2 = await getUserById(id2);
     const gameId = await this.gameController.createGame(roomId, [id1, id2]);
 
     sock1.join(roomId);
@@ -52,7 +56,7 @@ class Matchmaker {
     sock1.emit('match-found', payload);
     sock2.emit('match-found', payload);
 
-    console.info(`[MATCHMAKER] Matched ${id1} vs ${id2} → room ${roomId}, game ${gameId}`);
+    console.info(`[MATCHMAKER] Matched ${player1.nickname} vs ${player2.nickname} → room ${roomId}, game ${gameId}`);
 
     logMatchHistory({
       gameId,

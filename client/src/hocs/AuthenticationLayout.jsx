@@ -11,7 +11,7 @@ const AuthenticationLayout = (props) => {
     );
   }
 
-  return <HeaderElementLayout title={props.title}>{props.children}</HeaderElementLayout>;
+  return <HeaderElementLayout title={props.title} hideHeader={props.hideHeader} >{props.children}</HeaderElementLayout>;
 };
 
 export default AuthenticationLayout;
