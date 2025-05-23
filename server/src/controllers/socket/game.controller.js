@@ -115,6 +115,7 @@ class GameController extends EventEmitter {
         return gameId;
       }
     }
+    // Borra esto papu frito
     return null;
   }
 
