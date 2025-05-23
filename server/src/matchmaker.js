@@ -47,9 +47,6 @@ class Matchmaker {
     const player2 = await getUserById(id2);
     const gameId = await this.gameController.createGame(roomId, [id1, id2]);
 
-    sock1.join(roomId);
-    sock2.join(roomId);
-
     const payload = { gameId, roomId, players: [id1, id2] };
 
     // Notify both players that they have been matched

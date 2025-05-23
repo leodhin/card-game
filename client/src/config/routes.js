@@ -10,6 +10,7 @@ import DeckDetailsPage from "../pages/deck-details/DeckDetailsPage";
 import FriendPage from "../pages/friends-page";
 import AdminPage from "../pages/admin";
 import NotificationsPage from "../pages/notification-alert";
+import MemberPage from "../pages/members";
 
 const routesConfig = [
   { path: '/', component: HomePage, private: true },
@@ -22,6 +23,7 @@ const routesConfig = [
   { path: '/card/:cardId', component: CardGeneratorPage, private: true },
   { path: '/profile', component: ProfilePage, private: true },
   { path: '/friends', title: "Friends", component: FriendPage, private: true },
+  { path: '/members/:memberId', title: "Member", component: MemberPage, private: true },
   { path: '/login', component: LoginPage, private: false },
   { path: '/register', component: RegisterPage, private: false },
   { path: '/admin', title: "Admin dashboard", component: AdminPage, private: true },

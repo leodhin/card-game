@@ -4,11 +4,12 @@ import { styled } from '@mui/material/styles';
 import MuiAppBar from '@mui/material/AppBar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import Toolbar from '@mui/material/Toolbar';
 import Menu from '@mui/material/Menu';
+import Toolbar from '@mui/material/Toolbar';
 import MenuItem from '@mui/material/MenuItem';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import Badge from '@mui/material/Badge';  // Import Badge for notifications
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -41,7 +42,7 @@ const HeaderElementLayout = (props) => {
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
-  const { user, logout } = useSessionStore();
+  const { user, logout, hasPendingNotifications } = useSessionStore();
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -97,40 +98,29 @@ const HeaderElementLayout = (props) => {
           {/* HEADER */}
           <AppBar position="absolute" open={open}>
             <Toolbar sx={{ pr: '24px', backgroundColor: '#121212' }}>
-              <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
+
+              <Typography component="h1" variant="h6" color="inherit" noWrap width="150px" style={{ display: 'flex', alignItems: 'center' }}>
                 {props.title}
               </Typography>
 
               {/* Navigation Links */}
-              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-                <Link
-                  to="/"
-                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
-                >
+              <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                <Link to="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
                   <Typography variant="button" color="inherit">
                     Home
                   </Typography>
                 </Link>
-                <Link
-                  to="/card-list"
-                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
-                >
+                <Link to="/card-list" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
                   <Typography variant="button" color="inherit">
                     Cards
                   </Typography>
                 </Link>
-                <Link
-                  to="/decks"
-                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
-                >
+                <Link to="/decks" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
                   <Typography variant="button" color="inherit">
                     Decks
                   </Typography>
                 </Link>
-                <Link
-                  to="/friends"
-                  style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}
-                >
+                <Link to="/friends" style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px' }}>
                   <Typography variant="button" color="inherit">
                     Friends
                   </Typography>
@@ -138,7 +128,13 @@ const HeaderElementLayout = (props) => {
                 {user?.role === 'admin' && (
                   <Link
                     to="/admin"
-                    style={{ textDecoration: 'none', color: 'inherit', marginRight: '20px', display: 'flex', alignItems: 'center' }}
+                    style={{
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      marginRight: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
                   >
                     <Typography variant="button" color="inherit">
                       Admin Dashboard
@@ -147,11 +143,21 @@ const HeaderElementLayout = (props) => {
                 )}
               </Box>
 
-              <Box sx={{ flexGrow: 1 }} />
 
               <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-                <IconButton size="large" aria-label="show notifications" color="inherit" onClick={() => navigate('/notifications')}>
-                  <NotificationsIcon />
+                <IconButton
+                  size="large"
+                  aria-label="show notifications"
+                  color="inherit"
+                  onClick={() => navigate('/notifications')}
+                >
+                  {hasPendingNotifications ? (
+                    <Badge variant="dot" color="error">
+                      <NotificationsIcon />
+                    </Badge>
+                  ) : (
+                    <NotificationsIcon />
+                  )}
                 </IconButton>
                 <IconButton
                   size="large"
@@ -189,7 +195,6 @@ const HeaderElementLayout = (props) => {
         sx={{
           background: "#1E1E1E",
           flexGrow: 1,
-          overflowX: 'hidden',
         }}
       >
         <Container maxWidth="lg" sx={{ height: '100%', pt: 4, pb: 4 }}>

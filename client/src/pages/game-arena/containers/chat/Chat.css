@@ -10,8 +10,8 @@
 }
 
 .chat-messages {
-  flex: 1;
   padding: 10px;
+  height: 100%;
   overflow-y: auto;
   background: #1e1e1e;
 }
@@ -59,4 +59,13 @@
 
 .chat-send-btn:hover {
   background: #f0c040;
+}
+
+.new-message-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+  margin-left: 8px;
 }

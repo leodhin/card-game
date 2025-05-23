@@ -13,6 +13,21 @@ exports.getUserById = async (userId) => {
   }
 }
 
+exports.getUserByNickname = async (nickname) => {
+  try {
+    const user = await UserModel.findOne({ nickname })
+      .select('-password');
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw error;
+  }
+}
+
 
 exports.requestFriendship = async (userId, friendNickname) => {
   try {

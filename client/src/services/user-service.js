@@ -4,6 +4,10 @@ export const getProfile = () => {
   return get('user/profile')
 }
 
+export const getProfileById = (id) => {
+  return get(`user/${id}`);
+}
+
 export const requestFriendship = (nickname) => {
   return post('user/add-friend', { friendNickname: nickname });
 };

@@ -50,9 +50,7 @@ function DeckDetailsPage() {
 
   return (
     <PageContainer isLoading={isLoading}>
-      <h1>Deck Details</h1>
       <p>Deck Name: {deckDetails?.name}</p>
-      <p>Deck ID: {deckId}</p>
       <div>
         <h2>Cards</h2>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../containers/PageContainer';
 import { getFriends, requestFriendship, acceptFriendRequest, rejectFriendRequest } from '../../services/user-service';
 import './FriendPage.css';
@@ -13,6 +14,8 @@ const FriendsPage = () => {
   const [error, setError] = useState(null);
   const [friendIdentifier, setFriendIdentifier] = useState('');
   const [friendMessage, setFriendMessage] = useState('');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -131,7 +134,7 @@ const FriendsPage = () => {
           {friendsData.friends.length > 0 ? (
             <ul>
               {friendsData.friends.map((friend) => (
-                <li key={friend._id} className="friend-item">
+                <li key={friend._id} className="friend-item" onClick={() => navigate(`/members/${friend.nickname}`)}>
                   <div className="friend-avatar">
                     <img
                       src={friend.avatar || 'https://picsum.photos/100'}

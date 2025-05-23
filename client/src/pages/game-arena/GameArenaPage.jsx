@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "react-router-dom";
-import useSocket from "../../hooks/useSocket";
+import ChatIcon from "@mui/icons-material/Chat";
+
+import useSocket from "../../hooks/useGameSocket";
 import PageContainer from "../../containers/PageContainer";
 import OpponentArea from "./containers/OpponentArea";
 import PlayerArea from "./containers/PlayerArea";
@@ -11,7 +13,7 @@ import ActionButtons from "./containers/ActionButtons";
 import Chat from "./containers/chat";
 import CustomDragLayer from "./components/CustomDragLayer";
 import Card from "../../components/Card";
-import ChatIcon from "@mui/icons-material/Chat"; // Using Material UI Chat icon
+
 import "./GameArenaPage.css";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -37,6 +39,7 @@ function GameArenaPage() {
   const { api, socket, connecting, hasjoined, error: connectionError, data, userId } =
     useSocket(SERVER_URL, gameId);
 
+  console.log("data", data);
   // Compute myPlayer and enemyPlayer
   const { myPlayer, enemyPlayer } = useMemo(() => {
     if (!data || !data.players) return { myPlayer: null, enemyPlayer: null };
@@ -63,9 +66,8 @@ function GameArenaPage() {
         setOpponentActiveCards(enemyPlayer.field);
       }
 
-      const activePlayer = data.players[data.currentTurn];
       setGamePhase(data.phase);
-      setIsMyTurn(activePlayer && activePlayer.id === userId);
+      setIsMyTurn(data.currentTurn === userId);
     }
   }, [data, userId]);
 
@@ -95,7 +97,11 @@ function GameArenaPage() {
   };
 
   return (
-    <PageContainer isLoading={!connecting && !hasjoined} loadingMessage="Loading game..." error={connectionError}>
+    <PageContainer
+      isLoading={!connecting && !hasjoined}
+      loadingMessage="Loading game..."
+      error={connectionError}
+    >
       <DndProvider backend={HTML5Backend}>
         <CustomDragLayer />
 
@@ -134,7 +140,7 @@ function GameArenaPage() {
             playerActiveCards={playerActiveCards}
             handleDropOnPlayer={handleDropOnPlayer}
             onAttack={(playerCard, opponentCard) => {
-              api.playerAttack(playerCard.id, opponentCard.id);
+              api.playerAttack(playerCard?._id, opponentCard?._id);
             }}
           />
           <PlayerArea
@@ -160,15 +166,7 @@ function GameArenaPage() {
         </div>
       </DndProvider>
 
-      {/* Chat toggle button remains the same */}
-      <div className="chat-toggle" onClick={toggleChat}>
-        <ChatIcon style={{ fontSize: 40, color: "#f7d155" }} />
-      </div>
-
-      {/* Always mount Chat and toggle visibility with a CSS class */}
-      <div className={`chat-overlay ${chatOpen ? "open" : "closed"}`}>
-        <Chat socket={socket} />
-      </div>
+      <Chat socket={socket} />
     </PageContainer>
   );
 }

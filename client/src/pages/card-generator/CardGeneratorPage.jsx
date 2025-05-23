@@ -23,6 +23,7 @@ const CardGeneratorPage = () => {
   // New state for modal and input prompt
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [isBackloading, setIsBackloading] = useState(false);
 
   useEffect(() => {
     if (cardId) {
@@ -76,7 +77,7 @@ const CardGeneratorPage = () => {
       alert("Please provide a prompt for image generation.");
       return;
     }
-    setLoading(true);
+    setIsBackloading(true);
     try {
       const result = await generateAIImage(aiPrompt);
       if (result?.image) {
@@ -92,9 +93,9 @@ const CardGeneratorPage = () => {
     } catch (err) {
       alert("Failed to generate image. Please try again.");
     } finally {
-      setLoading(false);
       setIsModalOpen(false);
       setAiPrompt("");
+      setIsBackloading(false);
     }
   };
 
@@ -127,7 +128,7 @@ const CardGeneratorPage = () => {
   }
 
   return (
-    <PageContainer>
+    <PageContainer isBackloading={isBackloading} backloadingMessage="Loading card generator...">
       <div className="card-generator-grid">
         {/* Left Side: Card Preview */}
         <div className="card-preview">

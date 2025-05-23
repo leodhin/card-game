@@ -3,11 +3,14 @@ import {
   Container,
   Typography,
   Box,
+  Paper,
   List,
   ListItem,
   ListItemText,
-  CircularProgress
+  CircularProgress,
+  Collapse
 } from '@mui/material';
+import { TransitionGroup } from 'react-transition-group';
 import PageContainer from '../../containers/PageContainer';
 import { getNotifications } from '../../services/user-service';
 
@@ -35,25 +38,38 @@ const NotificationsPage = () => {
     <PageContainer isLoading={loading} error={error}>
       <Container maxWidth="md">
         <Box sx={{ my: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Notifications
-          </Typography>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : notifications.length === 0 ? (
-            <Typography variant="body1">No notifications available.</Typography>
+          {notifications.length === 0 ? (
+            <Typography variant="body1" sx={{ textAlign: 'center' }}>
+              No notifications available.
+            </Typography>
           ) : (
             <List>
-              {notifications?.map((notif) => (
-                <ListItem key={notif._id} divider>
-                  <ListItemText
-                    primary={notif.message}
-                    secondary={new Date(notif.createdAt).toLocaleString()}
-                  />
-                </ListItem>
-              ))}
+              <TransitionGroup>
+                {notifications.map((notif) => (
+                  <Collapse key={notif._id}>
+                    <ListItem divider sx={{ px: 2, py: 1 }}>
+                      <Paper
+                        elevation={3}
+                        sx={{
+                          width: '100%',
+                          p: 2,
+                          borderRadius: 2,
+                          backgroundColor: 'background.paper',
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                              {notif.message}
+                            </Typography>
+                          }
+                          secondary={new Date(notif.createdAt).toLocaleString()}
+                        />
+                      </Paper>
+                    </ListItem>
+                  </Collapse>
+                ))}
+              </TransitionGroup>
             </List>
           )}
         </Box>

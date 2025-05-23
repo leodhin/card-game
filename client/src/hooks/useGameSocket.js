@@ -126,7 +126,7 @@ const useSocket = (serverUrl, gameId, nickname) => {
     },
     playerAttack: (attacker, defender) => {
       if (socketRef.current) {
-        socketRef.current.emit("attack");
+        socketRef.current.emit("attack", attacker, defender);
       }
     },
     playerPassTurn: () => {

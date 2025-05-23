@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listDecks, deleteDeck } from "../../services/deck-service";
-import { Fab } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import "./DeckList.css";
 import PageContainer from "../../containers/PageContainer";
+import {
+  Card,
+  CardActionArea,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Typography,
+  IconButton,
+  Fab,
+  Grid
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+
+import BackCardPNG from '../../assets/back-card.png';
+
+import "./DeckList.css";
 
 function DeckListPage() {
   const [decks, setDecks] = useState([]);
@@ -41,7 +55,7 @@ function DeckListPage() {
   };
 
   const handleCreateNewDeck = () => {
-    navigate('/deck-generator');
+    navigate("/deck-generator");
   };
 
   useEffect(() => {
@@ -50,45 +64,39 @@ function DeckListPage() {
 
   return (
     <PageContainer isLoading={loading} error={error}>
-      <div className="deck-list">
+      <Grid container spacing={3} style={{ padding: 20 }}>
         {decks.map((deck) => (
-          <div
-            key={deck._id}
-            className="deck-item"
-            onClick={() => handleNavigateToDeck(deck._id)}
-          >
-            <div className="deck-header">
-              <h2>{deck.name}</h2>
-              <button
-                className="delete-deck-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteDeck(deck._id);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-            <p>Cards: {deck.cards.length}</p>
-            <div className="deck-preview">
-              {deck.cards.slice(0, 3).map((card) => (
-                <img
-                  key={card._id}
-                  src={card.img}
-                  alt={card.name}
-                  className="deck-preview-card"
+          <Grid item xs={12} sm={6} md={4} key={deck._id}>
+            <Card sx={{ width: 345 }}>
+              <CardActionArea onClick={() => handleNavigateToDeck(deck._id)}>
+                <CardMedia
+                  component="img"
+                  height="180"
+                  image={deck.image ? deck.image : BackCardPNG}
+                  alt={deck.name}
                 />
-              ))}
-            </div>
-          </div>
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {deck.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {deck.description ? deck.description : "No description available."}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Card Count: {deck.cards.length}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+              {/* Other components like CardActions */}
+            </Card>
+          </Grid>
         ))}
-      </div>
-
+      </Grid>
       <Fab
         color="tertiary"
         aria-label="add"
         onClick={handleCreateNewDeck}
-        style={{ position: 'fixed', bottom: 30, right: 30 }}
+        style={{ position: "fixed", bottom: 30, right: 30 }}
       >
         <AddIcon />
       </Fab>

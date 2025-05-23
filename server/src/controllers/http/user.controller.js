@@ -1,6 +1,6 @@
 const User = require('../../models/User.model');
 const { getMatchHistory } = require('../../services/game.service');
-const { requestFriendship, getUserFriends, acceptFriendRequest, rejectFriendRequest, getAllUsers } = require('../../services/User.service');
+const { requestFriendship, getUserFriends, acceptFriendRequest, rejectFriendRequest, getAllUsers, getUserByNickname } = require('../../services/User.service');
 const { addNotification } = require('../../services/Notification.service');
 
 exports.getProfile = async (req, res) => {
@@ -24,6 +24,28 @@ exports.getProfile = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });
+  }
+};
+
+exports.getProfileByNickname = async (req, res) => {
+  try {
+    const nickname = req.params.nickname;
+    const user = await getUserByNickname(nickname);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const matchHistory = await getMatchHistory(user._id);
+    if (!matchHistory) {
+      return res.status(404).json({ error: 'Match history not found' });
+    }
+    return res.status(200).json({
+      user,
+      matchHistory,
+    });
+  } catch (error) {
+    console.error('Error fetching user by ID:', error);
+    res.status(500).json({ message: 'Error fetching user by ID', error: error.message });
   }
 };
 

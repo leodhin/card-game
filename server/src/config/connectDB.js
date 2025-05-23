@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { updateStaleMatches } = require('./services/game.service');
+const { updateStaleMatches } = require('../services/game.service');
 
 let connection = null;
 

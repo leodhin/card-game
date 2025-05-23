@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { toast } from "react-toastify";
+
 import useSessionStore from "../stores/sessionStore";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -12,33 +14,48 @@ export const useMatchmakingSocket = () => {
   const { logout, token } = useSessionStore();
 
   useEffect(() => {
-    if (status === "queued") {
+    const socket = io(SERVER_URL + "/lobby", {
+      extraHeaders: { authorization: `Bearer ${token}` },
+    });
 
-      const socket = io(SERVER_URL + "/game", {
-        extraHeaders: { authorization: `Bearer ${token}` },
-      });
-      socketRef.current = socket;
+    socketRef.current = socket;
 
-      socket.on("connect", () => setError(null));
-      socket.on("match-found", payload => {
-        setMatch(payload);
-        setStatus("matched");
-      });
-      socket.on("error", (error) => {
-        setError("An error occurred while connecting to the server.");
+    socket.on("connect", () => setError(null));
+
+    socket.on("error", (error) => {
+      if (error.message === "ALREADY_IN_GAME") {
+        setStatus("idle");
+        setMatch(error.roomId);
+      }
+      else if (error.message === "ALREADY_IN_QUEUE") {
+        setStatus("idle");
+        toast.error("You are already in a queue.");
+      } else {
         console.error("Socket error:", error);
-      });
+        toast.error("Something went wrong. Please try again.");
+        setStatus("idle");
+      }
+    });
 
-      socket.on("unauthorized", (errorMsg) => {
-        console.error("Unauthorized:", errorMsg);
-        logout();
-        window.location.href = '/login';
-      });
+    socket.on("match-found", payload => {
+      setMatch(payload?.gameId);
+      setStatus("matched");
+    });
+
+    socket.on("unauthorized", (errorMsg) => {
+      console.error("Unauthorized:", errorMsg);
+      logout();
+      window.location.href = '/login';
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (status === "queued") {
 
       socketRef.current?.emit("queue-1v1");
 
-      // Handle disconnection on unmount
-      return () => socket.disconnect();
     }
   }, [status]);
 
@@ -49,7 +66,7 @@ export const useMatchmakingSocket = () => {
   };
 
   const cancel = () => {
-    socketRef.current?.emit("cancel-queue");
+    socketRef.current?.disconnect();
     setStatus("idle");
   };
 

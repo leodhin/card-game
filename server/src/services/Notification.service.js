@@ -11,7 +11,7 @@ exports.getNotificationsByUser = async (userId) => {
 
 exports.hasPendingNotifications = async (userId) => {
   try {
-    const notifications = await Notification.find({ user: userId, isRead: false });
+    const notifications = await Notification.find({ user: userId, read: false });
     return notifications.length > 0;
   } catch (error) {
     throw new Error('Error checking pending notifications');

@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const MatchHistoryModel = require('../models/Game.model');
 
 exports.logMatchHistory = async (matchRecord) => {

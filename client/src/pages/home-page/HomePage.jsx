@@ -11,7 +11,11 @@ function HomePage() {
   const { queue, cancel, status, match } = useMatchmakingSocket();
 
   useEffect(() => {
-    if (match) navigate(`/game/${match.gameId}`, { state: match });
+    if (match) {
+      if (status === "matched") {
+        navigate(`/game/${match}`, { state: match });
+      }
+    }
   }, [match, navigate]);
 
   const handleFindGame = useCallback(() => {
@@ -47,13 +51,24 @@ function HomePage() {
             </p>
           </div>
           <div className="home-center">
-            <button
-              onClick={handleFindGame}
-              className="play-game-button"
-              disabled={status === "matched"}
-            >
-              {buttonLabel}
-            </button>
+            {match ? (
+              <button
+                onClick={() => navigate(`/game/${match}`, { state: match })}
+                className="play-game-button"
+                disabled={status === "matched"}
+              >
+                Go back to the game
+              </button>
+            ) : (
+              <button
+                onClick={handleFindGame}
+                className="play-game-button"
+                disabled={status === "matched"}
+              >
+                {buttonLabel}
+              </button>
+            )}
+
           </div>
         </div>
       </PageContainer>
