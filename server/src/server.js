@@ -8,7 +8,7 @@ const http = require('http');
 const apiRoutes = require('./routes/api.routes');
 const setupGameNamespaceEvents = require('./sockets/setupGameNamespaceEvents');
 const setupLobbyNamespaceEvents = require('./sockets/setupLobbyNamespaceEvents');
-
+require('./config/cloudfare.config');
 
 // Connecting to database pool instance
 require('./config/connectDB');

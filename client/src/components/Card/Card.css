@@ -1,16 +1,14 @@
 .card {
   width: 10rem;
-  height: 12rem;
+  height: 14rem;
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 
   border: 2px solid #f7d155;
-  outline: 2px solid #b39128;
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
 }
 

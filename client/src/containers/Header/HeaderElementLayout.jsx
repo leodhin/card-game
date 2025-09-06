@@ -11,10 +11,10 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import Badge from '@mui/material/Badge';  // Import Badge for notifications
 import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import useSessionStore from '../../stores/sessionStore';
+import logoIMG from '../../assets/logo.png';
 
 const drawerWidth = 240;
 
@@ -100,7 +100,12 @@ const HeaderElementLayout = (props) => {
             <Toolbar sx={{ pr: '24px', backgroundColor: '#121212' }}>
 
               <Typography component="h1" variant="h6" color="inherit" noWrap width="150px" style={{ display: 'flex', alignItems: 'center' }}>
-                {props.title}
+                <Box
+                  component="img"
+                  src={logoIMG}
+                  alt="Logo"
+                  sx={{ width: '80%', objectFit: 'contain' }}
+                />
               </Typography>
 
               {/* Navigation Links */}
@@ -167,7 +172,16 @@ const HeaderElementLayout = (props) => {
                   onClick={handleProfileMenuOpen}
                   color="inherit"
                 >
-                  <AccountCircle />
+                  {user?.profilePicture ? (
+                    <Box
+                      component="img"
+                      src={`${user.profilePicture}?t=${new Date().getTime()}`}
+                      alt="Profile"
+                      sx={{ width: 32, height: 32, borderRadius: '50%' }}
+                    />
+                  ) : (
+                    <AccountCircle />
+                  )}
                 </IconButton>
               </Box>
             </Toolbar>
@@ -181,9 +195,7 @@ const HeaderElementLayout = (props) => {
                 overflowX: 'hidden',
               }}
             >
-              <Container maxWidth="lg" sx={{ height: '100%', pt: 4, pb: 4 }}>
-                {props.children}
-              </Container>
+              {props.children}
             </Box>
           </AppBar>
           {renderMenu}
@@ -197,9 +209,7 @@ const HeaderElementLayout = (props) => {
           flexGrow: 1,
         }}
       >
-        <Container maxWidth="lg" sx={{ height: '100%', pt: 4, pb: 4 }}>
-          {props.children}
-        </Container>
+        {props.children}
       </Box>
     </>
   );

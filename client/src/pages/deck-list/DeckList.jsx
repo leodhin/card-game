@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isEmpty } from "lodash";
+
 import { listDecks, deleteDeck } from "../../services/deck-service";
 import PageContainer from "../../containers/PageContainer";
 import {
   Card,
   CardActionArea,
-  CardActions,
   CardContent,
   CardMedia,
   Typography,
@@ -13,7 +14,6 @@ import {
   Fab,
   Grid
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 
 import BackCardPNG from '../../assets/back-card.png';
@@ -64,8 +64,8 @@ function DeckListPage() {
 
   return (
     <PageContainer isLoading={loading} error={error}>
-      <Grid container spacing={3} style={{ padding: 20 }}>
-        {decks.map((deck) => (
+      {!isEmpty(decks)
+        ? (decks.map((deck) => (
           <Grid item xs={12} sm={6} md={4} key={deck._id}>
             <Card sx={{ width: 345 }}>
               <CardActionArea onClick={() => handleNavigateToDeck(deck._id)}>
@@ -87,11 +87,14 @@ function DeckListPage() {
                   </Typography>
                 </CardContent>
               </CardActionArea>
-              {/* Other components like CardActions */}
             </Card>
           </Grid>
-        ))}
-      </Grid>
+        )))
+        : (
+          <Typography variant="body1" sx={{ textAlign: 'center' }}>
+            No decks available. Please create a new deck.
+          </Typography>
+        )}
       <Fab
         color="tertiary"
         aria-label="add"

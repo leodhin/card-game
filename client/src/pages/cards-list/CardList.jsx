@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Fab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PageContainer from "../../containers/PageContainer";
 import { getCardList, deleteCard } from '../../services/card-service';
 import Card from '../../components/Card/Card';
+
 import './CardsList.css';
 
 function CardsListPage() {
@@ -37,7 +39,7 @@ function CardsListPage() {
       await deleteCard(cardId);
       setCards((prevCards) => prevCards.filter((card) => card.id !== cardId));
     } catch (err) {
-      setError(err.message);
+      toast.error('Error deleting card');
     }
   };
 

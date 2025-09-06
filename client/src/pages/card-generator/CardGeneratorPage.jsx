@@ -20,7 +20,6 @@ const CardGeneratorPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // New state for modal and input prompt
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isBackloading, setIsBackloading] = useState(false);
@@ -101,6 +100,7 @@ const CardGeneratorPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsBackloading(true);
 
     try {
       if (cardId) {
@@ -117,6 +117,9 @@ const CardGeneratorPage = () => {
       console.error("Error submitting card data:", error);
       alert("Failed to submit card. Please try again.");
     }
+    finally {
+      setIsBackloading(false);
+    }
   };
 
   if (loading) {
@@ -128,14 +131,9 @@ const CardGeneratorPage = () => {
   }
 
   return (
-    <PageContainer isBackloading={isBackloading} backloadingMessage="Loading card generator...">
+    <PageContainer isBackloading={isBackloading}>
       <div className="card-generator-grid">
         {/* Left Side: Card Preview */}
-        <div className="card-preview">
-          <Card card={cardData} style={{ width: "100%", height: "100%" }} />
-        </div>
-
-        {/* Right Side: Input Form */}
         <div className="card-form">
           <h1 className="card-generator-title">
             {cardId ? "Edit Card" : "Create New Card"}
@@ -222,6 +220,12 @@ const CardGeneratorPage = () => {
               {cardId ? "Update Card" : "Generate Card"}
             </button>
           </form>
+        </div>
+
+
+        {/* Right Side: Input Form */}
+        <div className="card-preview">
+          <Card card={cardData} style={{ width: "100%", height: "100%" }} />
         </div>
       </div>
       {/* Modal for entering AI image prompt */}

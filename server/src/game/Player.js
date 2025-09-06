@@ -2,11 +2,12 @@ const { GAME_STATE } = require('../utils/constants');
 const Deck = require('../models/Deck.model');
 
 class Player {
-  constructor(userId, name) {
+  constructor(userId, data) {
     this.hand = [];
     this.deck = {};
     this.id = userId;
-    this.name = name;
+    this.name = data.nickname || "Unknown Player";
+    this.avatar = data.profilePicture;
     this.state = GAME_STATE.WAITING;
     this.gameId = {};
     this.health = 10;
@@ -19,6 +20,7 @@ class Player {
   getPlayerState() {
     return {
       id: this.id,
+      avatar: this.avatar,
       name: this.name,
       state: this.state,
       gameId: this.gameId,
@@ -68,11 +70,6 @@ class Player {
     if (this.deck.length > 0) {
       const card = this.deck.pop();
       this.hand.push(card);
-
-      const baseUrl = process.env.SERVER_URL;
-      if (card.img) {
-        card.img = baseUrl + "/" + card.img;
-      }
     }
   }
 

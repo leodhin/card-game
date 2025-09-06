@@ -1,11 +1,10 @@
 /* Grid container for the card preview and form */
 .card-generator-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1.3fr;
   /* Two equal columns */
   gap: 20px;
   padding: 20px;
-  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -14,8 +13,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f4f4f4;
-  border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -51,7 +48,6 @@
 
 .form-group input,
 .form-group textarea {
-  width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
@@ -70,7 +66,8 @@
   border-radius: 5px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.height: 30px;
+  s ease;
 }
 
 .submit-button:hover {

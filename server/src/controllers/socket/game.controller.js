@@ -1,4 +1,6 @@
 const EventEmitter = require('events');
+const { isEmpty } = require('lodash');
+
 const Game = require('../../game/Game');
 const { PHASE_STATE, GAME_STATE } = require('../../utils/constants');
 const { ERROR_CODES } = require('../../game/Errors');
@@ -12,7 +14,7 @@ class GameController extends EventEmitter {
   async createGame(gameId, userIds) {
     const game = await new Game(gameId, userIds);
     this.games.set(gameId, game);
-    return gameId;
+    return game;
   }
 
   handleGameEnd(gameId) {
@@ -51,25 +53,32 @@ class GameController extends EventEmitter {
     const game = this.games.get(gameId);
     if (!game) throw Error(ERROR_CODES.GAME_NOT_FOUND);
 
+    if (this.isGameOver(gameId)) {
+      this.handleGameEnd(gameId);
+      return;
+    }
 
     const attackerCard = game.getAttacker().field.find(card => card.id === attackerCardId);
     if (!attackerCard) throw Error(ERROR_CODES.CARD_ERROR);
 
     const defenderCard = game.getDeffender().field.find(card => card.id === defenderCardId);
-    if (!defenderCard) throw Error(ERROR_CODES.CARD_ERROR);
+    if (!defenderCard && !isEmpty(game.getDeffender().field)) throw Error(ERROR_CODES.CARD_ERROR);
 
     game.attack(attackerCard, defenderCard);
-
-    if (this.isGameOver(gameId)) {
-      this.handleGameEnd(gameId);
-      return;
-    }
     game.nextTurn();
   }
 
   isGameOver(gameId) {
     const game = this.games.get(gameId);
-    return game?.state === GAME_STATE.FINISHED;
+    if (!game) return false;
+
+    const player1 = game.getPlayer(game.players[0]);
+    const player2 = game.getPlayer(game.players[1]);
+    if (!player1 || !player2) return false;
+    if (player1.health <= 0 || player2.health <= 0) {
+      game.state = GAME_STATE.FINISHED;
+      return true;
+    }
   }
 
   playerPassTurn(gameId, userId) {
@@ -111,11 +120,10 @@ class GameController extends EventEmitter {
 
   getGameIdByUserId(userId) {
     for (const [gameId, game] of this.games.entries()) {
-      if (game?.players?.some(player => player.id === userId)) {
+      if (game.getPlayer(userId)) {
         return gameId;
       }
     }
-    // Borra esto papu
     return null;
   }
 

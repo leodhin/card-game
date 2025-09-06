@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "react-router-dom";
-import ChatIcon from "@mui/icons-material/Chat";
 
 import useSocket from "../../hooks/useGameSocket";
 import PageContainer from "../../containers/PageContainer";
@@ -13,8 +12,10 @@ import ActionButtons from "./containers/ActionButtons";
 import Chat from "./containers/chat";
 import CustomDragLayer from "./components/CustomDragLayer";
 import Card from "../../components/Card";
+import TimerDisplay from "./components/TimerDisplay";
 
 import "./GameArenaPage.css";
+import { Height } from "@mui/icons-material";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
@@ -34,7 +35,6 @@ function GameArenaPage() {
   const [gamePhase, setGamePhase] = useState("");
   const [playerStack, setPlayerStack] = useState([]);
   const [opponentStack, setOpponentStack] = useState([]);
-  const [chatOpen, setChatOpen] = useState(false);
 
   const { api, socket, connecting, hasjoined, error: connectionError, data, userId } =
     useSocket(SERVER_URL, gameId);
@@ -92,10 +92,6 @@ function GameArenaPage() {
     ));
   };
 
-  const toggleChat = () => {
-    setChatOpen((prev) => !prev);
-  };
-
   return (
     <PageContainer
       isLoading={!connecting && !hasjoined}
@@ -108,7 +104,7 @@ function GameArenaPage() {
         {/* Left side profiles */}
         <div className="left-profiles">
           <div className={`profile ${!isMyTurn ? 'active-turn' : ''}`}>
-            <img className="profile-pic" src="https://picsum.photos/200/300" alt="Opponent" />
+            <img className="profile-pic" src={enemyPlayer?.avatar} alt="Opponent" />
             <div className="profile-info">
               <span className="profile-name">{enemyPlayer?.name}</span>
               <div className="profile-stats">
@@ -118,7 +114,7 @@ function GameArenaPage() {
             </div>
           </div>
           <div className={`profile ${isMyTurn ? 'active-turn' : ''}`}>
-            <img className="profile-pic" src="https://picsum.photos/200/300" alt="Player" />
+            <img className="profile-pic" src={myPlayer?.avatar} alt="Player" />
             <div className="profile-info">
               <span className="profile-name">{myPlayer?.name}</span>
               <div className="profile-stats">
@@ -164,6 +160,8 @@ function GameArenaPage() {
         <div className="player-stack">
           <div className="stack-container">{renderStack(playerStack)}</div>
         </div>
+
+        <TimerDisplay remainingTime={data?.timer} />
       </DndProvider>
 
       <Chat socket={socket} />

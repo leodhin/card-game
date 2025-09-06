@@ -1,7 +1,10 @@
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+
 const User = require('../../models/User.model');
 const { getMatchHistory } = require('../../services/game.service');
 const { requestFriendship, getUserFriends, acceptFriendRequest, rejectFriendRequest, getAllUsers, getUserByNickname } = require('../../services/User.service');
 const { addNotification } = require('../../services/Notification.service');
+const S3Client = require('../../config/cloudfare.config');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -24,6 +27,44 @@ exports.getProfile = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });
+  }
+};
+
+exports.updateProfilePicture = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const picture = req.body.picture;
+    let filename = null;
+
+    if (!picture) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: `profile-pictures/${userId}.png`,
+      Body: Buffer.from(picture.split(',')[1], 'base64'),
+      ContentType: 'image/png'
+    });
+    await S3Client.send(command);
+    filename = `https://pub-c498e737c85849229e42440f8001b793.r2.dev/profile-pictures/${userId}.png`;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: filename },
+      { new: true, select: '-password' }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    return res.status(200).json({
+      message: 'Profile picture updated successfully',
+      profilePicture: updatedUser.profilePicture,
+    });
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({ message: 'Error updating profile picture', error: error.message });
   }
 };
 

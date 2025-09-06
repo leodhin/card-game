@@ -75,37 +75,23 @@ const DeckGeneratorPage = () => {
   };
 
   return (
-    <PageContainer isLoading={loading} error={error}>
+    <PageContainer isLoading={loading} error={error} full={true}>
       <div className="deck-generator-container">
         <form onSubmit={handleSubmit} className="deck-generator-form">
-          <div className="form-group">
-            <label htmlFor="deckName">Deck Name:</label>
-            <input
-              type="text"
-              id="deckName"
-              name="deckName"
-              value={deckName}
-              onChange={handleDeckNameChange}
-              placeholder="Enter deck name"
-              required
-            />
-          </div>
+
           <div className="deck-builder">
-            <div className="available-cards">
-              <h2>Available Cards</h2>
-              <div className="cards-grid">
-                {availableCards.map((card) => (
-                  <Card card={card} key={card._id} onClick={() => handleAddCardToDeck(card)} />
-                ))}
-              </div>
-            </div>
-            <div className="selected-cards">
-              <h2>Selected Cards</h2>
-              <div className="cards-grid">
-                {selectedCards.map((card, index) => (
-                  <Card card={card} key={`${card._id}-${index}`} onClick={() => handleRemoveCardFromDeck(index)} />
-                ))}
-              </div>
+            <div className="form-group">
+              <label htmlFor="deckName">Deck Name:</label>
+              <input
+                type="text"
+                id="deckName"
+                name="deckName"
+                value={deckName}
+                onChange={handleDeckNameChange}
+                placeholder="Enter deck name"
+                required
+              />
+
               <button
                 type="button"
                 className="post-deck-button"
@@ -123,6 +109,23 @@ const DeckGeneratorPage = () => {
               >
                 Post Deck
               </button>
+            </div>
+            <div className="available-cards">
+              <h2>Available Cards</h2>
+              <div className="cards-grid">
+                {availableCards.map((card) => (
+                  <Card card={card} key={card._id} onClick={() => handleAddCardToDeck(card)} />
+                ))}
+              </div>
+            </div>
+            <div className="selected-cards">
+              <h2>Selected Cards</h2>
+              <div className="cards-grid">
+                {selectedCards.map((card, index) => (
+                  <Card card={card} key={`${card._id}-${index}`} onClick={() => handleRemoveCardFromDeck(index)} />
+                ))}
+              </div>
+
             </div>
           </div>
         </form>

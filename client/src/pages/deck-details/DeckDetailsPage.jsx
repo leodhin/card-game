@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-
-import { updateDeck, getDeck } from "../../services/deck-service";
+import { useParams, useNavigate } from "react-router-dom";
+import { getDeck } from "../../services/deck-service";
 import PageContainer from "../../containers/PageContainer";
+import { Box, Typography, Grid, Divider } from "@mui/material";
+import Card from "../../components/Card";
 
 function DeckDetailsPage() {
-  const { deckId } = useParams(); // Get the deck ID from the URL
+  const { deckId } = useParams();
+  const navigate = useNavigate();
   const [deckDetails, setDeckDetails] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [cards, setCards] = useState([]);
@@ -26,100 +28,65 @@ function DeckDetailsPage() {
     fetchDeckDetails();
   }, [deckId]);
 
-  const handleCardChange = (index, field, value) => {
-    const updatedCards = [...cards];
-    updatedCards[index] = { ...updatedCards[index], [field]: value };
-    setCards(updatedCards);
+  const handleEditCard = (cardId) => {
+    navigate(`/card/${cardId}`);
   };
 
-  const handleSaveDeck = async () => {
-    try {
-      const updatedDeck = { ...deckDetails, cards };
-      await updateDeck(deckId, updatedDeck);
-      alert("Deck updated successfully!");
-    } catch (error) {
-      console.error("Error updating deck:", error);
-      alert("Failed to update deck. Please try again.");
-    }
-  };
+  const handleDeleteCard = async (cardId) => {
 
-  const handleDeleteCard = (index) => {
-    const updatedCards = cards.filter((_, i) => i !== index);
-    setCards(updatedCards);
   };
 
   return (
     <PageContainer isLoading={isLoading}>
-      <p>Deck Name: {deckDetails?.name}</p>
-      <div>
-        <h2>Cards</h2>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Name</th>
-              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Image</th>
-              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Attack</th>
-              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Defense</th>
-              <th style={{ border: "1px solid #ccc", padding: "10px" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cards.map((card, index) => (
-              <tr key={`${card?._id || "card"}-${index}`}>
-                <td style={{ border: "1px solid #ccc", padding: "10px" }}>
-                  <input
-                    type="text"
-                    value={card.name}
-                    onChange={(e) => handleCardChange(index, "name", e.target.value)}
-                    style={{ width: "100%" }}
-                  />
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
-                  <img
-                    src={card.img}
-                    alt={card.name}
-                    style={{ width: "50px", height: "auto" }}
-                  />
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "10px" }}>
-                  <input
-                    type="number"
-                    value={card.attack}
-                    onChange={(e) => handleCardChange(index, "attack", e.target.value)}
-                    style={{ width: "100%" }}
-                  />
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "10px" }}>
-                  <input
-                    type="number"
-                    value={card.defense}
-                    onChange={(e) => handleCardChange(index, "defense", e.target.value)}
-                    style={{ width: "100%" }}
-                  />
-                </td>
-                <td style={{ border: "1px solid #ccc", padding: "10px", textAlign: "center" }}>
-                  <button
-                    onClick={() => handleDeleteCard(index)}
-                    style={{
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      padding: "5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <button onClick={handleSaveDeck} style={{ marginTop: "20px" }}>
-        Save Deck
-      </button>
+      <Box sx={{ p: 3, minHeight: "100vh" }}>
+        {/* Header Section */}
+        <Box sx={{ mb: 4, textAlign: "center" }}>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: "bold",
+              letterSpacing: 2,
+              color: "primary.secondary",
+            }}
+          >
+            {deckDetails?.name || "Unnamed Deck"}
+          </Typography>
+          <Divider sx={{ my: 2, borderColor: "grey.400" }} />
+          {deckDetails?.description && (
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              {deckDetails.description}
+            </Typography>
+          )}
+        </Box>
+        {/* Cards Grid */}
+        <Grid container spacing={3}>
+          {cards.map((card, index) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={3}
+              key={`${card?._id || "card"}-${index}`}
+            >
+              <Box>
+                <Card
+                  key={card.id}
+                  card={card}
+                  isActionable={true}
+                  onEdit={() => handleEditCard(card._id)}
+                  onDelete={() => handleDeleteCard(card._id)}
+                />
+                <Typography
+                  variant="subtitle1"
+                  sx={{ mt: 1, textAlign: "center", fontWeight: "bold" }}
+                >
+                  {card.name || "Unnamed Card"}
+                </Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     </PageContainer>
   );
 }

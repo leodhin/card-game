@@ -12,6 +12,8 @@ class Game {
     this.currentTurn = null;
     this.phase = PHASE_STATE.WAIT;
     this.chat = [];
+    this.gameTimer = null;
+    this.remainingTime = null;
     this.init(userIds);
   }
 
@@ -19,6 +21,7 @@ class Game {
     await Promise.all(userIds.map((userId) => this.addPlayer(userId)));
     if (this.players.size > 0) {
       this.currentTurn = Array.from(this.players.keys())[0];
+      this.startGame();
     }
   }
 
@@ -35,13 +38,14 @@ class Game {
     return {
       players: playersState,
       state: this.state,
-      currentTurn: this.currentTurn
+      currentTurn: this.currentTurn,
+      timer: this.remainingTime
     };
   }
 
   async addPlayer(userId) {
     const playerData = await getUserById(userId);
-    const newPlayer = new Player(userId, playerData.nickname);
+    const newPlayer = new Player(userId, playerData);
     this.players.set(userId, newPlayer);
   }
 
@@ -97,8 +101,6 @@ class Game {
   }
 
   attack(attackerCard, defenderCard) {
-    if (!attackerCard || !defenderCard) { throw new CardError(); }
-
     const defender = this.getDeffender();
     const attacker = this.getAttacker();
 
@@ -153,24 +155,49 @@ class Game {
       }
 
       this.phase = PHASE_STATE.PLAY;
+
+      this.gameTimer = setTimeout(() => {
+        this.endGameDueToTimeout();
+      }, 1800000);
+
+      this.remainingTime = 1800; // 30 minutes timer, in seconds
+
+      this.timerInterval = setInterval(() => {
+        this.remainingTime--;
+        if (this.remainingTime <= 0) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+      }, 1000);
     } else {
       console.log('Not enough players');
     }
   }
 
-  pauseGame() {
-    if (this.state === GAME_STATE.PLAYING) {
-      this.state = GAME_STATE.PAUSED;
+  endGameDueToTimeout() {
+    console.log("Game time expired. Ending game: all players lose.");
+    for (const player of this.players.values()) {
+      if (player.socket) {
+        player.socket.emit(SOCKET_EVENTS.GAME_OVER, {
+          reason: "Time expired. Game over: all players lose."
+        });
+      }
+      player.state = PLAYER_STATE.LOST || "LOST";
     }
-  }
-
-  resumeGame() {
-    if (this.state === GAME_STATE.PAUSED) {
-      this.state = GAME_STATE.PLAYING;
-    }
+    this.endGame();
   }
 
   endGame() {
+    // Clear the main game timer if it exists
+    if (this.gameTimer) {
+      clearTimeout(this.gameTimer);
+      this.gameTimer = null;
+    }
+    // Clear the timer interval, if running
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
     this.state = GAME_STATE.FINISHED;
   }
 

@@ -45,18 +45,18 @@ class Matchmaker {
     // Get the nicknames of the players
     const player1 = await getUserById(id1);
     const player2 = await getUserById(id2);
-    const gameId = await this.gameController.createGame(roomId, [id1, id2]);
+    const game = await this.gameController.createGame(roomId, [id1, id2]);
 
-    const payload = { gameId, roomId, players: [id1, id2] };
+    const payload = { gameId: game.gameId, roomId, players: [id1, id2] };
 
     // Notify both players that they have been matched
     sock1.emit('match-found', payload);
     sock2.emit('match-found', payload);
 
-    console.info(`[MATCHMAKER] Matched ${player1.nickname} vs ${player2.nickname} → room ${roomId}, game ${gameId}`);
+    console.info(`[MATCHMAKER] Matched ${player1.nickname} vs ${player2.nickname} → room ${roomId}, game ${game.gameId}`);
 
     logMatchHistory({
-      gameId,
+      gameId: game?.gameId,
       players: [id1, id2],
       roomId,
       status: 'in-progress',

@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // optional if you need params here
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Typography, Box, List, ListItem, ListItemText, Paper, Divider, Button } from '@mui/material';
 import PageContainer from '../../../containers/PageContainer';
-import { getProfile } from '../../../services/user-service';
-import { Container, Typography, Box, List, ListItem, ListItemText, Paper, Divider } from '@mui/material';
+import { getProfile, updateProfilePicture } from '../../../services/user-service';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // To store selected file on update
+  const fileInputRef = useRef(null);
 
-  // Fetching profile when component mounts
+  // Fetch profile on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -22,11 +23,41 @@ const ProfilePage = () => {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
-  const { matchHistory, user: { aiUsageRemaining, friends, nickname, _id, email, role } = {} } = profile;
+  const { matchHistory, user: { aiUsageRemaining, friends, nickname, _id, email, profilePicture, role } = {} } = profile;
+
+  // Handler to trigger file input click
+  const handleUpdatePictureClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle file selection and update profile picture
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = async () => {
+          const result = await updateProfilePicture(reader.result);
+          setProfile(prev => ({
+            ...prev,
+            user: {
+              ...prev.user,
+              profilePicture: result.profilePicture
+            }
+          }));
+        };
+      } catch (err) {
+        console.error('Error updating profile picture:', err);
+      }
+    }
+  };
 
   return (
     <PageContainer isLoading={loading} error={error}>
@@ -42,21 +73,40 @@ const ProfilePage = () => {
             }}
           >
             <img
-              src="https://picsum.photos/150"
+              src={`${profilePicture}?t=${new Date().getTime()}`}
               alt="Profile"
               className="profile-picture"
-              style={{ borderRadius: '50%', marginBottom: '16px' }}
+              onClick={handleUpdatePictureClick}
+              style={{
+                borderRadius: '50%',
+                marginBottom: '16px',
+                cursor: 'pointer', // indicates clickable element
+              }}
+            />
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
             />
             <Typography variant="h4" component="h1" gutterBottom>
               {nickname || 'Unknown'}
             </Typography>
             <Box sx={{ textAlign: 'left', mt: 2 }}>
-              <Typography variant="body1"><strong>User ID:</strong> {_id}</Typography>
-              <Typography variant="body1"><strong>Email:</strong> {email}</Typography>
-              <Typography variant="body1"><strong>Role:</strong> {role}</Typography>
-              <Typography variant="body1"><strong>AI Usage Remaining:</strong> {aiUsageRemaining}</Typography>
               <Typography variant="body1">
-                <strong>Friends:</strong> {friends && friends.length > 0 ? friends.join(', ') : 'No friends yet'}
+                <strong>Email:</strong> {email}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Role:</strong> {role}
+              </Typography>
+              <Typography variant="body1">
+                <strong>AI Usage Remaining:</strong> {aiUsageRemaining}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Friends:</strong>{' '}
+                {friends && friends.length > 0 ? friends.join(', ') : 'No friends yet'}
               </Typography>
             </Box>
           </Paper>

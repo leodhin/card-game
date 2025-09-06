@@ -1,4 +1,4 @@
-import { get, post } from './network';
+import { get, post, put } from './network';
 
 export const getProfile = () => {
   return get('user/profile')
@@ -6,6 +6,10 @@ export const getProfile = () => {
 
 export const getProfileById = (id) => {
   return get(`user/${id}`);
+}
+
+export const updateProfilePicture = (picture) => {
+  return put('user/profile-picture', { picture });
 }
 
 export const requestFriendship = (nickname) => {

@@ -1,30 +1,63 @@
 import React from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import errorImage from '../assets/error.png';
-import { Stack, Box } from '@mui/material';
+import { Container, Box } from '@mui/material';
 
-const PageContainer = ({ isLoading, loadingMessage, error, isBackloading, backloadingMessage, children, containerStyle }) => {
+const PageContainer = ({
+  full,
+  isLoading,
+  loadingMessage,
+  error,
+  isBackloading,
+  backloadingMessage,
+  children,
+  containerStyle,
+}) => {
   if (error) {
     return (
-      <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="100%">
-        <img src={errorImage} alt="Error" style={{ width: '500px', marginBottom: '20px' }} />
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        height="100%"
+      >
+        <img
+          src={errorImage}
+          alt="Error"
+          style={{ width: '500px', marginBottom: '20px' }}
+        />
       </Box>
     );
   }
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100%" color="primary" flexDirection="column" gap={2}>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100%"
+        color="primary"
+        flexDirection="column"
+        gap={2}
+      >
         <CircularProgress />
-        <Box ml={2}>
-          {loadingMessage || 'Loading...'}
-        </Box>
+        <Box ml={2}>{loadingMessage || 'Loading...'}</Box>
       </Box>
     );
   }
 
   return (
-    <Stack height="100%" style={containerStyle}>
+    <Container
+      maxWidth={full ? false : 'lg'}
+      sx={{
+        width: full ? '100%' : 'auto',
+        height: '100%',
+        pt: 4,
+        pb: 4,
+      }}
+    >
       {children}
       {isBackloading && (
         <Box
@@ -41,12 +74,10 @@ const PageContainer = ({ isLoading, loadingMessage, error, isBackloading, backlo
           zIndex={1}
         >
           <CircularProgress size={40} />
-          <Box mt={2}>
-            {backloadingMessage || 'Updating...'}
-          </Box>
+          <Box mt={2}>{backloadingMessage || 'Updating...'}</Box>
         </Box>
       )}
-    </Stack>
+    </Container>
   );
 };
 
